@@ -9,12 +9,14 @@ import { HomeComponent } from './home/home.component';
 
 import { routing } from "./app.routing";
 import {RequestService} from "./services/request.service";
+import {AuthGuard} from "./services/auth-guard.service";
+import {AuthService} from "./services/auth.service";
 
 @NgModule({
   declarations: [
     AppComponent,
     AuthComponent,
-    HomeComponent
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
@@ -24,7 +26,9 @@ import {RequestService} from "./services/request.service";
     routing,
   ],
   providers: [
-    RequestService
+    RequestService,
+    AuthGuard,
+    AuthService
   ],
   bootstrap: [AppComponent]
 })

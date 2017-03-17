@@ -33,6 +33,22 @@ export class RequestService {
       .catch(RequestService.handleError);
   }
 
+  basicAuth(token: string):Observable<any> {
+    let body = JSON.stringify({
+      "Url": token
+    });
+
+    let headers = new Headers({'Content-Type': 'application/json'});
+    let options = new RequestOptions({headers: headers});
+
+    //noinspection TypeScriptUnresolvedFunction
+    return this.http.post('/api/basicAuth/', body, options)
+      .map((res) => {
+        return true;
+      })
+      .catch(RequestService.handleError);
+  }
+
   private static extractData(res:Response) {
     let body = res.json();
     return body || {};
