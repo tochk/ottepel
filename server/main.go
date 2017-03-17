@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"encoding/json"
 	"strings"
+	"strconv"
 
 	"github.com/yanple/vk_api"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
-	"strconv"
 )
 
 type tokenUrl struct {
@@ -37,6 +37,34 @@ type UserData struct {
 	UserId      int
 }
 
+type PhotoResp struct {
+	Response struct {
+		Items []struct {
+			MessageId int `json:"message_id"`
+			Attachment struct {
+				Type string `json:"type"`
+				Photo struct {
+					Id        int `json:"id"`
+					AlbumId   int `json:"album_id"`
+					OwnerId   int `json:"owner_id"`
+					Photo75   string `json:"photo_75"`
+					Photo130  string `json:"photo_130"`
+					Photo604  string `json:"photo_604"`
+					Photo807  string `json:"photo_807"`
+					Photo1280 string `json:"photo_1280"`
+					Photo2560 string `json:"photo_2560"`
+					Width     int `json:"width"`
+					Height    int `json:"height"`
+					Text      string `json:"text"`
+					Date      int `json:"date"`
+					AccessKey string `json:"access_key"`
+				} `json:"photo"`
+			} `json:"attachment"`
+		} `json:"items"`
+		NextFrom string `json:"next_from"`
+	} `json:"response"`
+}
+
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	var api vk_api.Api
 	authUrl, err := api.GetAuthUrl(
@@ -47,43 +75,33 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-
-
 	mapJson, err := json.Marshal(AuthAnswer{Code: 200, Url: authUrl, })
-	if err != nil {
-		log.Printf("Error marshal: %s", err)
-		return
-	}
-	fmt.Fprint(w, string(mapJson))
-}
-
-func getConversationsHandler(w http.ResponseWriter, r *http.Request) {
-	v := make(map[string]interface{})
-	var t UserData
-	var api vk_api.Api
-	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	api.ExpiresIn = t.ExpiresIn
-	api.AccessToken = t.AccessToken
-	api.UserId = t.UserId
 
+	fmt.Fprint(w, string(mapJson))
+}
+
+func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 	params := make(map[string]string)
-	params["count"] = "200"
-	temp, err := api.Request("messages.getDialogs", params)
+	params["peer_id"] = userId
+	params["media_type"] = "photo"
+	params["count"] = "10"
+	params["v"] = "5.62"
+
+	var v PhotoResp
+	temp, err := api.Request("messages.getHistoryAttachments", params)
 	if err != nil {
-		log.Printf("Error query: %s", err)
-		return
+		return nil, err
 	}
-	log.Println(temp)
 	err = json.Unmarshal([]byte(temp), &v)
 	if err != nil {
-		log.Printf("Error Unmarshall: %s", err)
-		return
+		return nil, err
 	}
 	log.Println(v)
+	return nil, nil
 }
 
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,22 +137,11 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			api.UserId = tempInt
 		}
 	}
-	params := make(map[string]string)
-	params["peer_id"] = "42690043"
-	params["media_type"] = "photo"
-	params["count"] = "1"
 
-	temp, err := api.Request("account.getProfileInfo", params)
+	_, err = getListPhotos(api, "42690043")
 	if err != nil {
-		log.Printf("Error query: %s", err)
+		log.Println(err)
 		return
-	}
-	log.Println(temp)
-	v := make(map[string]map[string]string)
-	err = json.Unmarshal([]byte(temp), &v)
-	resp := v["response"]
-	for index, element := range resp {
-		log.Println(index, element)
 	}
 
 	mapJson, err := json.Marshal(tokenAnswer)
@@ -152,7 +159,7 @@ func getPhotos(api vk_api.Api) {
 func main() {
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
-	http.HandleFunc("/getConversations/", getConversationsHandler)
+	//http.HandleFunc("/getConversations/", getListPhotos)
 
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
