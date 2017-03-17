@@ -19,14 +19,12 @@ export class AuthService {
   }
 
   public login(token:string) {
-    this.setToken(token).subscribe(res => {
-      if (res) {
+    return new Promise((resolve, reject) => {
+      this.setToken(token).subscribe(res => {
         this.getUserInfo().subscribe(res => {
-          if (res) {
-            this.isAuthorize = true;
-          }
+          resolve(this.isAuthorize = true);
         });
-      }
+      });
     });
   }
 
@@ -41,19 +39,19 @@ export class AuthService {
       let token = localStorage.getItem(LOCAL_STORAGE.ACCESS_TOKEN),
         time = +localStorage.getItem(LOCAL_STORAGE.EXPIRES_IN);
       if (token && time >= 0) {
+        this.token = new Token(token, +time);
         this.getUserInfo().subscribe(
           res => {
             if (res) {
-              this.token = new Token(token, +time);
               resolve(this.isAuthorize = true);
             }
           },
           error => {
             resolve(this.isAuthorize = false);
           });
+      } else {
+        resolve(this.isAuthorize = false);
       }
-
-      resolve(this.isAuthorize = false);
     });
   }
 
@@ -84,7 +82,7 @@ export class AuthService {
     //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/vk/account.getProfileInfo?access_token=' + this.token.accessToken)
       .map((res:Response) => {
-        let resBody: any = res.json().response;
+        let resBody:any = res.json().response;
         this.user = new User(resBody.first_name + " " + resBody.last_name);
         return true;
       })

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {RequestService} from "../services/request.service";
 import {AuthService} from "../services/auth.service";
+import {Router} from '@angular/router';
+import {PATH} from "../constants/routing";
 
 @Component({
   selector: 'app-auth',
@@ -9,11 +11,13 @@ import {AuthService} from "../services/auth.service";
 })
 export class AuthComponent implements OnInit {
 
-  authLink: string;
-  token: string;
+  authLink:string;
+  token:string;
 
-  constructor(private requestService: RequestService,
-  private authService: AuthService) { }
+  constructor(private requestService:RequestService,
+              private authService:AuthService,
+              private router: Router) {
+  }
 
   ngOnInit() {
     this.token = '';
@@ -27,7 +31,8 @@ export class AuthComponent implements OnInit {
   }
 
   sendToken() {
-    this.authService.login(this.token);
+    this.authService.login(this.token).then(res => {
+      this.router.navigate([PATH.HOME]);
+    });
   }
-
 }
