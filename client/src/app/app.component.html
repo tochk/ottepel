@@ -1,9 +1,12 @@
 <nav>
   <div class="nav-wrapper blue lighten-3">
-    <ul id="nav-mobile" class="right hide-on-med-and-down">
+    <ul id="nav-mobile" class="left hide-on-med-and-down">
       <li><a [routerLink]="['/']">Домашняя страница</a></li>
       <li><a [routerLink]="['/auth']">Авторизация</a></li>
     </ul>
+    <span class="right user-name" *ngIf="authService.isAuthorize">
+      {{authService.user.name}}
+    </span>
   </div>
 </nav>
 
