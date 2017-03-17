@@ -47,6 +47,8 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+
+
 	mapJson, err := json.Marshal(AuthAnswer{Code: 200, Url: authUrl, })
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
@@ -70,8 +72,7 @@ func getConversationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	params := make(map[string]string)
 	params["count"] = "200"
-	api.Request("messages.getDialogs", params)
-	temp, err := api.Request("messages.getHistoryAttachments", params)
+	temp, err := api.Request("messages.getDialogs", params)
 	if err != nil {
 		log.Printf("Error query: %s", err)
 		return
@@ -123,12 +124,19 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	params["media_type"] = "photo"
 	params["count"] = "1"
 
-	temp, err := api.Request("messages.getHistoryAttachments", params)
+	temp, err := api.Request("account.getProfileInfo", params)
 	if err != nil {
 		log.Printf("Error query: %s", err)
 		return
 	}
 	log.Println(temp)
+	v := make(map[string]map[string]string)
+	err = json.Unmarshal([]byte(temp), &v)
+	resp := v["response"]
+	for index, element := range resp {
+		log.Println(index, element)
+	}
+
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
