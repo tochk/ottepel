@@ -19,7 +19,7 @@ export class AppComponent implements OnInit {
     if (nav === PATH.AUTH) {
       nav = '/';
     }
-    
+
     this.authService.isAuth().then(isAuth => {
       if (isAuth) {
         this.router.navigate([nav]);

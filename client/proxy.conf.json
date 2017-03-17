@@ -7,5 +7,14 @@
     "pathRewrite": {
       "^/api": ""
     }
+  },
+  "/vk": {
+    "target": "https://api.vk.com/method",
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "secure": false,
+    "pathRewrite": {
+      "^/vk": ""
+    }
   }
 }

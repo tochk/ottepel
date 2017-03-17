@@ -39,9 +39,8 @@ export class AuthService {
   public isAuth() {
     return new Promise((resolve, reject) => {
       let token = localStorage.getItem(LOCAL_STORAGE.ACCESS_TOKEN),
-        time = localStorage.getItem(LOCAL_STORAGE.EXPIRES_IN);
-
-      if (token && time) {
+        time = +localStorage.getItem(LOCAL_STORAGE.EXPIRES_IN);
+      if (token && time >= 0) {
         this.getUserInfo().subscribe(
           res => {
             if (res) {
@@ -58,7 +57,6 @@ export class AuthService {
     });
   }
 
-
   setToken(token:string):Observable<any> {
     let body = JSON.stringify({
       "Url": token
@@ -74,8 +72,8 @@ export class AuthService {
 
         this.token = new Token(body.AccessToken, +body.ExpiresIn);
 
-        localStorage.setItem(this.token.accessToken, LOCAL_STORAGE.ACCESS_TOKEN);
-        localStorage.setItem(this.token.expiresIn.toString(), LOCAL_STORAGE.EXPIRES_IN);
+        localStorage.setItem(LOCAL_STORAGE.ACCESS_TOKEN, this.token.accessToken);
+        localStorage.setItem(LOCAL_STORAGE.EXPIRES_IN, this.token.expiresIn.toString());
 
         return true;
       })
@@ -86,8 +84,8 @@ export class AuthService {
     //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/vk/account.getProfileInfo?access_token=' + this.token.accessToken)
       .map((res:Response) => {
-        let body: any = res.json().response;
-        this.user = User.create(body.first_name + " " + body.last_name);
+        let resBody: any = res.json().response;
+        this.user = new User(resBody.first_name + " " + resBody.last_name);
         return true;
       })
       .catch(AuthService.handleError);
