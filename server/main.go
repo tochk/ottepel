@@ -48,7 +48,11 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println(strings.Split(t.Url, "#"))
+	splittedUrl := strings.Split(strings.Split(t.Url, "#")[1], "&")
+	for _, urlPart := range splittedUrl {
+		tempUrlForMap := strings.Split(urlPart, "=")
+		log.Println(tempUrlForMap)
+	}
 	mapJson, err := json.Marshal(TokenAnswer{Code: 200, Status: "Ok", })
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
