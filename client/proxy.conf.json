@@ -1,0 +1,20 @@
+{
+  "/api": {
+    "target": "http://deploy-12.sgu.ru:4100",
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/vk": {
+    "target": "https://api.vk.com/method",
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "secure": false,
+    "pathRewrite": {
+      "^/vk": ""
+    }
+  }
+}

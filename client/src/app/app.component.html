@@ -1,0 +1,18 @@
+<nav>
+  <div class="nav-wrapper blue lighten-3">
+    <ul id="nav-mobile" class="right hide-on-med-and-down">
+      <li><a [routerLink]="['/']">Домашняя страница</a></li>
+      <li><a [routerLink]="['/auth']">Авторизация</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="row">
+  <div class="col s8 offset-s2">
+    <div class="card">
+      <div class="card-content">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+</div>
