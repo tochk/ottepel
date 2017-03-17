@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {RequestService} from "../services/request.service";
+import {AuthService} from "../services/auth.service";
 
 @Component({
   selector: 'app-auth',
@@ -11,21 +12,22 @@ export class AuthComponent implements OnInit {
   authLink: string;
   token: string;
 
-  constructor(private requestService: RequestService) { }
+  constructor(private requestService: RequestService,
+  private authService: AuthService) { }
 
   ngOnInit() {
+    this.token = '';
+    this.getAuthLink();
+  }
+
+  getAuthLink() {
     this.requestService.getAuthLink().subscribe((res) => {
       this.authLink = res.Url;
     });
-    this.token = '';
-  }
-
-  getToken() {
   }
 
   sendToken() {
-    this.requestService.setToken(this.token).subscribe((res) => {
-    });
+    this.authService.login(this.token);
   }
 
 }

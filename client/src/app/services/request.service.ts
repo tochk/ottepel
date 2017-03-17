@@ -16,36 +16,18 @@ export class RequestService {
       .map(RequestService.extractData)
       .catch(RequestService.handleError);
   }
-
-  setToken(token: string):Observable<any> {
-    let body = JSON.stringify({
-      "Url": token
-    });
-
-    let headers = new Headers({'Content-Type': 'application/json'});
-    let options = new RequestOptions({headers: headers});
-
+  
+  getChats():Observable<any> {
     //noinspection TypeScriptUnresolvedFunction
-    return this.http.post('/api/token/', body, options)
-      .map((res) => {
-        return true;
-      })
+    return this.http.get('/api/conversation/')
+      .map(RequestService.extractData)
       .catch(RequestService.handleError);
   }
 
-  basicAuth(token: string):Observable<any> {
-    let body = JSON.stringify({
-      "Url": token
-    });
-
-    let headers = new Headers({'Content-Type': 'application/json'});
-    let options = new RequestOptions({headers: headers});
-
+  getPhotos(convId: number):Observable<any> {
     //noinspection TypeScriptUnresolvedFunction
-    return this.http.post('/api/basicAuth/', body, options)
-      .map((res) => {
-        return true;
-      })
+    return this.http.get('/api/photo/' + convId)
+      .map(RequestService.extractData)
       .catch(RequestService.handleError);
   }
 

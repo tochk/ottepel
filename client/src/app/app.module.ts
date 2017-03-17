@@ -11,12 +11,14 @@ import { routing } from "./app.routing";
 import {RequestService} from "./services/request.service";
 import {AuthGuard} from "./services/auth-guard.service";
 import {AuthService} from "./services/auth.service";
+import { PhotosComponent } from './photos/photos.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AuthComponent,
     HomeComponent,
+    PhotosComponent,
   ],
   imports: [
     BrowserModule,
