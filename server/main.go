@@ -85,23 +85,40 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
+	result := make([]string, 0, 2000)
 	params := make(map[string]string)
 	params["peer_id"] = userId
 	params["media_type"] = "photo"
-	params["count"] = "10"
-	params["v"] = "5.62"
+	params["count"] = "200"
+	params["photos"] = "5.62"
+	params["offset"] = "0"
 
-	var v PhotoResp
+	var photos PhotoResp
 	temp, err := api.Request("messages.getHistoryAttachments", params)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(temp), &v)
+	err = json.Unmarshal([]byte(temp), &photos)
 	if err != nil {
 		return nil, err
 	}
-	log.Println(v)
-	return nil, nil
+	for _, item := range photos.Response.Items {
+		log.Println("item")
+		if item.Attachment.Photo.Width > 1280 {
+			result = append(result, item.Attachment.Photo.Photo1280)
+		} else if item.Attachment.Photo.Width > 807 {
+			result = append(result, item.Attachment.Photo.Photo807)
+		} else if item.Attachment.Photo.Width > 604 {
+			result = append(result, item.Attachment.Photo.Photo604)
+		} else if item.Attachment.Photo.Width > 130 {
+			result = append(result, item.Attachment.Photo.Photo130)
+		} else if item.Attachment.Photo.Width > 75 {
+			result = append(result, item.Attachment.Photo.Photo75)
+		} else {
+			log.Println("too small image", item.Attachment.Photo.Width)
+		}
+	}
+	return result, nil
 }
 
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,11 +155,12 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_, err = getListPhotos(api, "42690043")
+	photos, err := getListPhotos(api, "42690043")
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	log.Println(photos)
 
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
