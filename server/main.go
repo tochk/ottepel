@@ -1,11 +1,27 @@
 package main
 
-import  (
+import (
 	"log"
 	"net/http"
 	"github.com/yanple/vk_api"
 	"fmt"
+	"encoding/json"
+	"strings"
 )
+
+type tokenUrl struct {
+	Url string
+}
+
+type AuthAnswer struct {
+	Code int
+	Url  string
+}
+
+type TokenAnswer struct {
+	Code   int
+	Status string
+}
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	var api vk_api.Api
@@ -17,17 +33,34 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	//http.Redirect(w, r, authUrl, http.StatusFound)
-	fmt.Fprint(w, authUrl)
+	mapJson, err := json.Marshal(AuthAnswer{Code: 200, Url: authUrl, })
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<a href='/auth' target='_blank'>Авторизоваться</a>")
+func tokenHandler(w http.ResponseWriter, r *http.Request) {
+	var t tokenUrl
+	err := json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(strings.Split(t.Url, "#"))
+	mapJson, err := json.Marshal(TokenAnswer{Code: 200, Status: "Ok", })
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
 }
 
 func main() {
 	http.HandleFunc("/auth/", authHandler)
-	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/token/", tokenHandler)
+
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
 	if err != nil {
