@@ -31,16 +31,14 @@
 
     <div *ngIf="photos" class="row">
       <div id="columns">
-        <figure *ngFor="let photo of photos; let i = index"
-                (click)="selectPhoto(i)">
-          <img [src]="photo.url">
-          <figcaption>
+        <div *ngFor="let photo of photos; let i = index"
+             (click)="selectPhoto(i)" class="pin">
+          <img [src]="photo.url"/>
             <span *ngIf="selectedPhoto[i]"
                   class="btn-floating waves-effect waves-light blue">
               <i class="material-icons">done</i>
             </span>
-          </figcaption>
-        </figure>
+        </div>
       </div>
     </div>
 
