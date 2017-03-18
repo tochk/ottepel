@@ -76,7 +76,7 @@ export class PhotosComponent implements OnInit {
     });
 
     this.requestService.getTokenForArchive(photoForArchive).subscribe(token => {
-      window.open(URLS.SERVER + 'api/userFiles/' + token + '.zip');
+      window.open(URLS.SERVER + '/userFiles/' + token + '.zip');
     });
   }
 }

@@ -1,19 +1,24 @@
 import {User} from "./user";
 export class Conversation {
-  id: number;
-  title: string;
+  userId: number;
   user: User;
-  
+  charId: number;
+  chatTitle: string;
+
   constructor() {
-    this.id = -1;
+    this.userId = -1;
     this.user = new User();
+    this.charId = -1;
+    this.chatTitle = '';
   }
-  
-  static create(id: number, user: User): Conversation {
+
+  static create(userId: number, user: User, charId: number, chartTitle: string): Conversation {
     let conv = new Conversation();
-    conv.id = id;
+    conv.userId = userId;
     conv.user = user;
+    conv.charId = charId;
+    conv.chatTitle = chartTitle;
     return conv;
   }
-  
+
 }

@@ -14,6 +14,7 @@ import {AuthService} from "./services/auth.service";
 import { PhotosComponent } from './photos/photos.component';
 import {ConversationService} from "./services/conversation.service";
 import {UserService} from "./services/user.service";
+import { ConversationComponent } from './conversation/conversation.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import {UserService} from "./services/user.service";
     AuthComponent,
     HomeComponent,
     PhotosComponent,
+    ConversationComponent,
   ],
   imports: [
     BrowserModule,

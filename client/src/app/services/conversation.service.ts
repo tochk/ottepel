@@ -12,32 +12,58 @@ import {User} from "../classes/user";
 @Injectable()
 export class ConversationService {
 
-  // countConv:number;
+  countConv:number;
   conv:Conversation[];
 
   constructor(private http:Http, private authService:AuthService,
               private userService:UserService) {
   }
 
-  getConv(limit: number) {
-    this.conv = [];
+  getConversation(offset:number) {
     //noinspection TypeScriptUnresolvedFunction
-    return this.http.get('/vk/messages.searchDialogs?access_token=' + this.authService.token.accessToken + '&limit=' + limit + '&v=5.62')
+    return new Promise((resolve, reject) => {
+      this.getConv(offset).subscribe(res => {
+        this.conv = res.chats;
+        this.userService.getUsers(res.userIds).subscribe(users => {
+          users.forEach(user => {
+            let localConv = new Conversation();
+            localConv.user = user;
+            localConv.userId = user.id;
+            this.conv.push(localConv);
+          });
+
+          resolve(this.conv);
+        });
+      });
+    });
+  }
+
+  getConv(offset:number):Observable<any> {
+    if (offset === 0) {
+      this.conv = [];
+    }
+    //noinspection TypeScriptUnresolvedFunction
+    return this.http.get('/vk/messages.getDialogs?access_token=' + this.authService.token.accessToken + '&offset=' + offset
+      + '&v=5.62')
       .map(res => {
         let body = res.json().response;
-        body.forEach(item => {
-          let c:Conversation = new Conversation();
-          c.id = +item.id;
-          if (item.type === "chat") {
-            c.id += 2000000000;
-            c.title = item.title;
-          } else {
-            c.user = User.create(-1, item.first_name + ' ' + item.last_name);
-          }
+        this.countConv = body.cout;
 
-          this.conv.push(c);
+        let chats:Conversation[] = [];
+        let userIds = [];
+        body.items.forEach(item => {
+          let mess = item.message;
+          if (mess.chat_id) {
+            let localConv = new Conversation();
+            localConv.charId = mess.chat_id + 2000000000;
+            localConv.chatTitle = mess.title;
+            chats.push(localConv);
+          } else {
+            userIds.push(mess.user_id);
+          }
         });
-        return this.conv;
+
+        return {'chats': chats, 'userIds': userIds};
       })
       .catch(ConversationService.handleError);
   }
