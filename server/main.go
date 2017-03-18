@@ -86,6 +86,14 @@ type GetPhotosRequest struct {
 	Photos      []string
 }
 
+type IsFileExistStruct struct {
+	IsExist bool
+}
+
+type IsFileExistRequest struct {
+	Token string
+}
+
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	var api vk_api.Api
 	authUrl, err := api.GetAuthUrl(
@@ -293,6 +301,26 @@ func generateToken() string {
 	return fmt.Sprintf("%x", b)
 }
 
+func isFileExistHandler(w http.ResponseWriter, r *http.Request) {
+	var isFileExistRequest IsFileExistRequest
+
+	err := json.NewDecoder(r.Body).Decode(&isFileExistRequest)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	isExist := true
+	if _, err := os.Stat("userFiles/"+isFileExistRequest.Token+".zip"); os.IsNotExist(err) {
+		isExist = false
+	}
+	mapJson, err := json.Marshal(IsFileExistStruct{IsExist:isExist})
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
+}
+
 func downloadFiles(files []string, dir string) {
 	log.Println("Total files: " + strconv.Itoa(len(files)))
 	err := os.Mkdir(dir, os.FileMode(0744))
@@ -351,6 +379,7 @@ func main() {
 	http.HandleFunc("/getPhotos/", photosHandler)
 	http.HandleFunc("/getArchive/", getPhotosArchiveHandler)
 	http.HandleFunc("/userFiles/", userFilesHandler)
+	http.HandleFunc("/isFileExist/", isFileExistHandler)
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
 	if err != nil {
