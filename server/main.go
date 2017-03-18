@@ -12,7 +12,15 @@ import (
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
+	"os"
+	"io"
 )
+
+type QueueItem struct {
+	QueueId     int
+	UrlList     []string
+	AccessToken string
+}
 
 type tokenUrl struct {
 	Url string
@@ -75,6 +83,11 @@ type Photos struct {
 	Photos []string
 }
 
+type GetPhotosRequest struct {
+	AccessToken string
+	Photos      []string
+}
+
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	var api vk_api.Api
 	authUrl, err := api.GetAuthUrl(
@@ -117,18 +130,43 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 		log.Println(len(photos.Response.Items))
 		if prev != photos.Response.NextFrom {
 			for _, item := range photos.Response.Items {
-				if item.Attachment.Photo.Width > 1280 {
-					result = append(result, item.Attachment.Photo.Photo1280)
-				} else if item.Attachment.Photo.Width > 807 {
-					result = append(result, item.Attachment.Photo.Photo807)
-				} else if item.Attachment.Photo.Width > 604 {
-					result = append(result, item.Attachment.Photo.Photo604)
-				} else if item.Attachment.Photo.Width > 130 {
-					result = append(result, item.Attachment.Photo.Photo130)
-				} else if item.Attachment.Photo.Width > 75 {
-					result = append(result, item.Attachment.Photo.Photo75)
+				if item.Attachment.Photo.Photo2560 != "" {
+					if strings.Split(item.Attachment.Photo.Photo2560, ".")[len(strings.Split(item.Attachment.Photo.Photo2560, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo2560)
+						continue
+					}
+				}
+				if item.Attachment.Photo.Photo1280 != "" {
+					if strings.Split(item.Attachment.Photo.Photo1280, ".")[len(strings.Split(item.Attachment.Photo.Photo1280, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo1280)
+						continue
+					}
+				}
+				if item.Attachment.Photo.Photo807 != "" {
+					if strings.Split(item.Attachment.Photo.Photo807, ".")[len(strings.Split(item.Attachment.Photo.Photo807, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo807)
+						continue
+					}
+				}
+				if item.Attachment.Photo.Photo604 != "" {
+					if strings.Split(item.Attachment.Photo.Photo604, ".")[len(strings.Split(item.Attachment.Photo.Photo604, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo604)
+						continue
+					}
+				}
+				if item.Attachment.Photo.Photo130 != "" {
+					if strings.Split(item.Attachment.Photo.Photo130, ".")[len(strings.Split(item.Attachment.Photo.Photo130, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo130)
+						continue
+					}
+				}
+				if item.Attachment.Photo.Photo75 != "" {
+					if strings.Split(item.Attachment.Photo.Photo75, ".")[len(strings.Split(item.Attachment.Photo.Photo75, "."))-1] != "gif" {
+						result = append(result, item.Attachment.Photo.Photo75)
+						continue
+					}
 				} else {
-					log.Println("too small image", item.Attachment.Photo.Width)
+					log.Println("An error was occured", item.Attachment.Photo.Width)
 					log.Println("Item trace: ", item)
 				}
 			}
@@ -185,6 +223,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	/*temp, _ := getListPhotos(api, "42690043")
+	go downloadFiles(temp)*/
+
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
@@ -216,11 +257,62 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(mapJson))
 }
 
+func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
+	var getPhotoRequest GetPhotosRequest
+
+	err := json.NewDecoder(r.Body).Decode(&getPhotoRequest)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	go downloadFiles(getPhotoRequest.Photos)
+}
+
+func downloadFiles(files []string) {
+	log.Println("Total files: " + strconv.Itoa(len(files)))
+	for _, link := range files {
+		downloadSingleFile(link)
+	}
+}
+
+func downloadSingleFile(url string) {
+	tokens := strings.Split(url, "/")
+	fileName := "userFiles/" + tokens[len(tokens)-1]
+	for {
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			break
+		} else {
+			splFileName := strings.Split(fileName, ".")
+			splFileName[0] += "0"
+			fileName = splFileName[0] + "." + splFileName[1]
+		}
+	}
+	output, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println("Error while creating", fileName, "-", err)
+		return
+	}
+	defer output.Close()
+
+	response, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error while downloading", url, "-", err)
+		return
+	}
+	defer response.Body.Close()
+
+	_, err = io.Copy(output, response.Body)
+	if err != nil {
+		fmt.Println("Error while downloading", url, "-", err)
+		return
+	}
+}
+
 func main() {
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
 	http.HandleFunc("/getPhotos/", photosHandler)
-
+	http.HandleFunc("/getArchive/", getPhotosArchiveHandler)
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
 	if err != nil {
