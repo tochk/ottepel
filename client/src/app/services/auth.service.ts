@@ -6,7 +6,9 @@ import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/throw';
 import {Token} from "../classes/token";
 import {User} from "../classes/user";
+import {Router} from '@angular/router';
 import {LOCAL_STORAGE} from "../constants/local-storage";
+import {PATH} from "../constants/routing";
 
 @Injectable()
 export class AuthService {
@@ -15,10 +17,11 @@ export class AuthService {
   user:User;
   token:Token;
 
-  constructor(private http:Http) {
+  constructor(private http:Http, private router: Router) {
   }
 
   public login(token:string) {
+    //noinspection TypeScriptUnresolvedFunction
     return new Promise((resolve, reject) => {
       this.setToken(token).subscribe(res => {
         this.getUserInfo().subscribe(res => {
@@ -32,9 +35,11 @@ export class AuthService {
     this.isAuthorize = false;
     localStorage.removeItem(LOCAL_STORAGE.ACCESS_TOKEN);
     localStorage.removeItem(LOCAL_STORAGE.EXPIRES_IN);
+    this.router.navigate([PATH.AUTH]);
   }
 
   public isAuth() {
+    //noinspection TypeScriptUnresolvedFunction
     return new Promise((resolve, reject) => {
       let token = localStorage.getItem(LOCAL_STORAGE.ACCESS_TOKEN),
         time = +localStorage.getItem(LOCAL_STORAGE.EXPIRES_IN);

@@ -1,6 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {Conversation} from "../classes/conversation";
-import {ConversationService} from "../services/conversation.service";
 
 @Component({
   selector: 'app-home',
@@ -9,13 +7,8 @@ import {ConversationService} from "../services/conversation.service";
 })
 export class HomeComponent implements OnInit {
 
-  conversations: Conversation[];
-
-  constructor(private convService: ConversationService) { }
+  constructor() { }
 
   ngOnInit() {
-    this.convService.getConv(200).subscribe((res: any) => {
-      this.conversations = res;
-    });
   }
 }

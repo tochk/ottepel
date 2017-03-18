@@ -1,7 +1,9 @@
-import {Component, OnInit, HostListener} from '@angular/core';
+import {Component, OnInit, HostListener, EventEmitter} from '@angular/core';
 import {Photo} from "../classes/photo";
 import {ActivatedRoute, Params} from '@angular/router';
 import {RequestService} from "../services/request.service";
+import {MaterializeAction} from 'angular2-materialize';
+import {URLS} from "../constants/urls";
 
 @Component({
   selector: 'app-photos',
@@ -11,8 +13,16 @@ import {RequestService} from "../services/request.service";
 export class PhotosComponent implements OnInit {
   photos:Photo[];
   allPhoto:Photo[];
+
+  selectedPhoto:boolean[];
+  countSelectPhoto:number;
+
   lastIndex:number;
-  step: number;
+  step:number;
+
+  isLinkExist:boolean;
+  token:string;
+  link:string;
 
   constructor(private route:ActivatedRoute,
               private requestService:RequestService) {
@@ -20,26 +30,31 @@ export class PhotosComponent implements OnInit {
 
   ngOnInit() {
     this.step = 20;
+    this.countSelectPhoto = 0;
     this.route.params.forEach((params:Params) => {
       let convId = +params['convId'];
       this.requestService.getPhotos(convId).subscribe((res) => {
+        let len = res.length;
         this.allPhoto = res;
-        this.lastIndex = res.length < this.step ? res.length : this.step;
+
+        this.selectedPhoto = new Array(len);
+        //noinspection TypeScriptUnresolvedFunction
+        this.selectedPhoto.fill(false);
+
+        this.lastIndex = len < this.step ? len : this.step;
         this.photos = this.allPhoto.slice(0, this.lastIndex);
       });
     });
-
-    // this.photos = [];
-    // for (let i = 0; i < 10; i++)
-    //   this.photos.push(new Photo("https://pp.userapi.com/c639825/v639825919/f168/LRPf8ZzAGCk.jpg"));
   }
 
   addPhoto() {
-    let li = this.allPhoto.length < this.lastIndex + this.step ? this.allPhoto.length : this.lastIndex + this.step;
-    for (let i = this.lastIndex; i < li; i++) {
-      this.photos.push(this.allPhoto[i]);
+    if (this.allPhoto) {
+      let li = this.allPhoto.length < this.lastIndex + this.step ? this.allPhoto.length : this.lastIndex + this.step;
+      for (let i = this.lastIndex; i < li; i++) {
+        this.photos.push(this.allPhoto[i]);
+      }
+      this.lastIndex = li;
     }
-    this.lastIndex = li;
   }
 
   @HostListener("window:scroll", ['$event'])
@@ -54,6 +69,52 @@ export class PhotosComponent implements OnInit {
     if (windowBottom >= docHeight) {
       this.addPhoto();
     }
+  }
+
+  selectPhoto(photoIndex:number) {
+    this.selectedPhoto[photoIndex] = !this.selectedPhoto[photoIndex];
+    if (this.selectedPhoto[photoIndex]) {
+      this.countSelectPhoto++;
+    } else {
+      this.countSelectPhoto--;
+    }
+  }
+
+  getArchive() {
+    let photoForArchive = [];
+    this.selectedPhoto.forEach((photo, i) => {
+      if (photo) {
+        photoForArchive.push(this.allPhoto[i].url);
+      }
+    });
+
+    this.openModal();
+    this.requestService.getTokenForArchive(photoForArchive).subscribe(token => {
+      // window.open(URLS.SERVER + '/userFiles/' + token + '.zip');
+      this.token = token;
+
+      let checkToken = this.requestService.isFileExist(this.token).subscribe(res => {
+        this.isLinkExist = res;
+        if (res) {
+          this.link = URLS.SERVER + '/userFiles/' + this.token + '.zip';
+          checkToken.unsubscribe();
+        }
+      });
+    });
+  }
+
+  modalActions = new EventEmitter<string|MaterializeAction>();
+
+  openModal() {
+    this.modalActions.emit({action: "modal", params: ['open']});
+  }
+
+  closeModal() {
+    this.modalActions.emit({action: "modal", params: ['close']});
+
+    this.isLinkExist = false;
+    this.token = '';
+    this.selectedPhoto.fill(false);
   }
 
 }
