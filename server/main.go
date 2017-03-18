@@ -13,25 +13,8 @@ import (
 	"crypto/rand"
 
 	"github.com/yanple/vk_api"
+	"os/exec"
 )
-
-type QueueItem struct {
-	UrlList     []string
-	AccessToken string
-	Token       string
-	Completed   bool
-}
-
-var Queue struct {
-	CurrentJobId int
-	Items        []QueueItem
-	MapTokenId   map[string]int
-	Free         bool
-}
-
-type PhotoToken struct {
-	Token string
-}
 
 type tokenUrl struct {
 	Url string
@@ -60,6 +43,10 @@ type UserData struct {
 type UserForPhoto struct {
 	AccessToken string
 	UserId      int
+}
+
+type PhotoArchiveRest struct {
+	Token string
 }
 
 type PhotoResp struct {
@@ -97,15 +84,6 @@ type Photos struct {
 type GetPhotosRequest struct {
 	AccessToken string
 	Photos      []string
-}
-
-type CheckStatusResp struct {
-	Token string
-}
-
-type QueueStatus struct {
-	Status   bool
-	QueuePos int
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +181,7 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 		}
 		prev = params["start_from"]
 	}
-	log.Println("Photos list created")
+	log.Println("All photos loaded from attachments")
 	return result, nil
 }
 
@@ -242,8 +220,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	temp, _ := getListPhotos(api, "42690043")
-	//addToQueue(api.AccessToken, temp)
-	go downloadFiles(generateToken(), temp)
+	go createArchive(temp, generateToken())
 
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
@@ -267,8 +244,39 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println("Photo list Length:", len(photos))
+	log.Println("Total photos going to frontend", len(photos))
 	mapJson, err := json.Marshal(Photos{photos})
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
+}
+
+func createArchive(files []string, dir string) {
+	log.Println("Creating archive for", dir)
+	downloadFiles(files, dir)
+	cmd := exec.Command("zip", "-r", "userFiles/"+dir+".zip", dir)
+	err := cmd.Run()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Archive created for", dir)
+
+}
+
+func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
+	var getPhotoRequest GetPhotosRequest
+
+	err := json.NewDecoder(r.Body).Decode(&getPhotoRequest)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	token := generateToken()
+	go createArchive(getPhotoRequest.Photos, token)
+	mapJson, err := json.Marshal(PhotoArchiveRest{Token: token})
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
 		return
@@ -282,57 +290,25 @@ func generateToken() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func addToQueue(accessToken string, urlList []string) string {
-	queueItem := QueueItem{Token: generateToken(), AccessToken: accessToken, UrlList: urlList, Completed: false}
-	Queue.Items = append(Queue.Items, queueItem)
-	Queue.MapTokenId[queueItem.Token] = len(Queue.Items) - 1
-	log.Println("Added to queue")
-	return queueItem.Token
-}
-
-func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
-	var getPhotoRequest GetPhotosRequest
-
-	err := json.NewDecoder(r.Body).Decode(&getPhotoRequest)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	token := addToQueue(getPhotoRequest.AccessToken, getPhotoRequest.Photos)
-
-	mapJson, err := json.Marshal(PhotoToken{Token: token})
-	if err != nil {
-		log.Printf("Error marshal: %s", err)
-		return
-	}
-	fmt.Fprint(w, string(mapJson))
-}
-
-func downloadFiles(token string, files []string) {
+func downloadFiles(files []string, dir string) {
 	log.Println("Total files: " + strconv.Itoa(len(files)))
-	err := os.Mkdir(token, os.FileMode(0744))
+	err := os.Mkdir(dir, os.FileMode(0744))
 	if err != nil {
-		log.Println("Error while creating directory", token, "-", err)
+		log.Println("Error while creating directory", dir, "-", err)
 		return
 	}
 	for _, link := range files {
-		downloadSingleFile(token, link)
+		downloadSingleFile(dir, link)
 	}
+	log.Println("Files downloaded for", dir)
 }
 
 func downloadSingleFile(dir string, url string) {
 	tokens := strings.Split(url, "/")
 	fileName := dir + "/" + tokens[len(tokens)-1]
-	log.Println(fileName)
-	dontDownload := false
-	for {
-		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			break
-		} else {
-			dontDownload = true
-		}
-	}
-	if dontDownload {
+	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+
+	} else {
 		return
 	}
 	output, err := os.Create(fileName)
@@ -356,53 +332,21 @@ func downloadSingleFile(dir string, url string) {
 	}
 }
 
-func queueWorker() {
-	for {
-		if len(Queue.Items)-1 > Queue.CurrentJobId {
-			log.Println("Starting queue job...")
-			log.Println(len(Queue.Items[Queue.CurrentJobId+1].UrlList) ,"photos in this job")
-			downloadFiles(Queue.Items[Queue.CurrentJobId+1].Token, Queue.Items[Queue.CurrentJobId+1].UrlList)
-			Queue.Items[Queue.CurrentJobId+1].Completed = true
-			Queue.CurrentJobId++
-			log.Println("Queue job completed")
-		} else {
-			time.Sleep(time.Second * 1)
-		}
-	}
-}
-
-func queueStatusHandler(w http.ResponseWriter, r *http.Request) {
-	var checkStatusResp CheckStatusResp
-
-	err := json.NewDecoder(r.Body).Decode(&checkStatusResp)
-	if err != nil {
-		log.Println(err)
+func userFilesHandler(w http.ResponseWriter, r *http.Request) {
+	path := "." + r.URL.Path
+	if f, err := os.Stat(path); err == nil && !f.IsDir() {
+		http.ServeFile(w, r, path)
 		return
 	}
-	mapJson, err := json.Marshal(QueueStatus{
-		Status:   Queue.Items[Queue.MapTokenId[checkStatusResp.Token]].Completed,
-		QueuePos: Queue.MapTokenId[checkStatusResp.Token] - Queue.CurrentJobId,
-	})
-	if err != nil {
-		log.Printf("Error marshal: %s", err)
-		return
-	}
-	fmt.Fprint(w, string(mapJson))
+	http.NotFound(w, r)
 }
 
 func main() {
-	log.Println("Application started...")
-	Queue.CurrentJobId = -1
-	Queue.Items = make([]QueueItem, 0)
-	Queue.MapTokenId = make(map[string]int)
-	Queue.Free = true
-	//go queueWorker()
-	log.Println("Queue initialized...")
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
 	http.HandleFunc("/getPhotos/", photosHandler)
 	http.HandleFunc("/getArchive/", getPhotosArchiveHandler)
-	http.HandleFunc("/queueStatus/", queueStatusHandler)
+	http.HandleFunc("/userFiles/", userFilesHandler)
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
 	if err != nil {
