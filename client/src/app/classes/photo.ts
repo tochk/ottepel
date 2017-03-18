@@ -1,16 +1,7 @@
 export class Photo {
-  id: number;
   url: string;
   
-  constructor() {
-    
+  constructor(url: string) {
+    this.url = url;
   }
-  
-  static create(id: number, url: string): Photo {
-    let photoObj = new Photo();
-    photoObj.id = id;
-    photoObj.url = url;
-    return photoObj;
-  }
-
 }

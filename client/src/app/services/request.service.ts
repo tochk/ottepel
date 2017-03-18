@@ -4,11 +4,13 @@ import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/throw';
+import {AuthService} from "./auth.service";
+import {Photo} from "../classes/photo";
 
 @Injectable()
 export class RequestService {
 
-  constructor(private http:Http) { }
+  constructor(private http:Http, private authService: AuthService) { }
 
   getAuthLink():Observable<any> {
     //noinspection TypeScriptUnresolvedFunction
@@ -16,18 +18,26 @@ export class RequestService {
       .map(RequestService.extractData)
       .catch(RequestService.handleError);
   }
-  
-  getChats():Observable<any> {
-    //noinspection TypeScriptUnresolvedFunction
-    return this.http.get('/api/conversation/')
-      .map(RequestService.extractData)
-      .catch(RequestService.handleError);
-  }
 
   getPhotos(convId: number):Observable<any> {
+    let body = JSON.stringify({
+      "AccessToken": this.authService.token.accessToken,
+      "UserId": convId
+    });
+
+    let headers = new Headers({'Content-Type': 'application/json'});
+    let options = new RequestOptions({headers: headers});
+
     //noinspection TypeScriptUnresolvedFunction
-    return this.http.get('/api/photo/' + convId)
-      .map(RequestService.extractData)
+    return this.http.post('/api/getPhotos/', body, options)
+      .map((res:Response) => {
+        let result: Photo[] = [];
+        let body = res.json();
+        body.Photos.forEach(ph => {
+          result.push(new Photo(ph));
+        });
+        return result;
+      })
       .catch(RequestService.handleError);
   }
 
