@@ -218,10 +218,6 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			api.UserId = tempInt
 		}
 	}
-
-	temp, _ := getListPhotos(api, "42690043")
-	go createArchive(temp, generateToken())
-
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
@@ -256,14 +252,21 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 func createArchive(files []string, dir string) {
 	log.Println("Creating archive for", dir)
 	downloadFiles(files, dir)
-	cmd := exec.Command("zip", "-r", "userFiles/"+dir+".zip", dir)
+	cmd := exec.Command("zip", "-r", "tempUserFiles/"+dir+".zip", dir)
 	err := cmd.Run()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("Archive created for", dir)
-
+	log.Println("Moving archive to public directory")
+	cmdMove := exec.Command("mv", "tempUserFiles/"+dir+".zip", "userFiles/"+dir+".zip")
+	err = cmdMove.Run()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Moving sucesfful")
 }
 
 func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
@@ -299,6 +302,7 @@ func downloadFiles(files []string, dir string) {
 	}
 	for _, link := range files {
 		downloadSingleFile(dir, link)
+		time.Sleep(time.Millisecond * 50)
 	}
 	log.Println("Files downloaded for", dir)
 }
