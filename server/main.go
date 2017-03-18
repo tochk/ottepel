@@ -17,9 +17,17 @@ import (
 )
 
 type QueueItem struct {
-	QueueId     int
 	UrlList     []string
 	AccessToken string
+	Token       string
+	Completed   bool
+}
+
+var Queue struct {
+	CurrentJobId int
+	Items        []QueueItem
+	MapTokenId   map[string]int
+	Free         bool
 }
 
 type tokenUrl struct {
@@ -257,6 +265,8 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(mapJson))
 }
 
+func addToQueue()
+
 func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	var getPhotoRequest GetPhotosRequest
 
@@ -278,14 +288,16 @@ func downloadFiles(files []string) {
 func downloadSingleFile(url string) {
 	tokens := strings.Split(url, "/")
 	fileName := "userFiles/" + tokens[len(tokens)-1]
+	dontDownload := false
 	for {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break
 		} else {
-			splFileName := strings.Split(fileName, ".")
-			splFileName[0] += "0"
-			fileName = splFileName[0] + "." + splFileName[1]
+			dontDownload = true
 		}
+	}
+	if dontDownload {
+		return
 	}
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -308,7 +320,20 @@ func downloadSingleFile(url string) {
 	}
 }
 
+func queueWorker() {
+	for {
+		time.Sleep(time.Millisecond * 300)
+	}
+}
+
 func main() {
+	log.Println("Application started...")
+	Queue.CurrentJobId = -1
+	Queue.Items = make([]QueueItem, 0)
+	Queue.MapTokenId = make(map[string]int)
+	Queue.Free = true
+	go queueWorker()
+	log.Println("Queue initialized...")
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
 	http.HandleFunc("/getPhotos/", photosHandler)
