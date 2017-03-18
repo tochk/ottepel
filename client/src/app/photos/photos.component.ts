@@ -13,6 +13,7 @@ export class PhotosComponent implements OnInit {
   photos:Photo[];
   allPhoto:Photo[];
   selectedPhoto:boolean[];
+  countSelectPhoto:number;
   lastIndex:number;
   step:number;
 
@@ -22,31 +23,31 @@ export class PhotosComponent implements OnInit {
 
   ngOnInit() {
     this.step = 20;
+    this.countSelectPhoto = 0;
     this.route.params.forEach((params:Params) => {
       let convId = +params['convId'];
       this.requestService.getPhotos(convId).subscribe((res) => {
+        let len = res.length;
         this.allPhoto = res;
 
-        this.selectedPhoto = new Array(res.length);
+        this.selectedPhoto = new Array(len);
         //noinspection TypeScriptUnresolvedFunction
         this.selectedPhoto.fill(false);
 
-        this.lastIndex = res.length < this.step ? res.length : this.step;
+        this.lastIndex = len < this.step ? len : this.step;
         this.photos = this.allPhoto.slice(0, this.lastIndex);
       });
     });
-
-    // this.photos = [];
-    // for (let i = 0; i < 10; i++)
-    //   this.photos.push(new Photo("https://pp.userapi.com/c639825/v639825919/f168/LRPf8ZzAGCk.jpg"));
   }
 
   addPhoto() {
-    let li = this.allPhoto.length < this.lastIndex + this.step ? this.allPhoto.length : this.lastIndex + this.step;
-    for (let i = this.lastIndex; i < li; i++) {
-      this.photos.push(this.allPhoto[i]);
+    if (this.allPhoto) {
+      let li = this.allPhoto.length < this.lastIndex + this.step ? this.allPhoto.length : this.lastIndex + this.step;
+      for (let i = this.lastIndex; i < li; i++) {
+        this.photos.push(this.allPhoto[i]);
+      }
+      this.lastIndex = li;
     }
-    this.lastIndex = li;
   }
 
   @HostListener("window:scroll", ['$event'])
@@ -65,6 +66,11 @@ export class PhotosComponent implements OnInit {
 
   selectPhoto(photoIndex:number) {
     this.selectedPhoto[photoIndex] = !this.selectedPhoto[photoIndex];
+    if (this.selectedPhoto[photoIndex]) {
+      this.countSelectPhoto++;
+    } else {
+      this.countSelectPhoto--;
+    }
   }
 
   getArchive() {

@@ -19,32 +19,37 @@ export class ConversationService {
               private userService:UserService) {
   }
 
-  getConversation(offset:number) {
+  getConversation(offset:number, step: number) {
     //noinspection TypeScriptUnresolvedFunction
     return new Promise((resolve, reject) => {
-      this.getConv(offset).subscribe(res => {
+      this.getConv(offset, step).subscribe(res => {
         this.conv = res.chats;
-        this.userService.getUsers(res.userIds).subscribe(users => {
-          users.forEach(user => {
-            let localConv = new Conversation();
-            localConv.user = user;
-            localConv.userId = user.id;
-            this.conv.push(localConv);
-          });
 
-          resolve(this.conv);
-        });
+        if (res.userIds.length > 0) {
+          this.userService.getUsers(res.userIds).subscribe(users => {
+            users.forEach(user => {
+              let localConv = new Conversation();
+              localConv.user = user;
+              localConv.userId = user.id;
+              this.conv.push(localConv);
+            });
+            resolve(this.conv);
+          });
+        } else {
+          resolve([]);
+        }
+
       });
     });
   }
 
-  getConv(offset:number):Observable<any> {
+  getConv(offset:number, step: number):Observable<any> {
     if (offset === 0) {
       this.conv = [];
     }
     //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/vk/messages.getDialogs?access_token=' + this.authService.token.accessToken + '&offset=' + offset
-      + '&v=5.62')
+      + '&count=' + step + '&v=5.62')
       .map(res => {
         let body = res.json().response;
         this.countConv = body.cout;
@@ -55,7 +60,7 @@ export class ConversationService {
           let mess = item.message;
           if (mess.chat_id) {
             let localConv = new Conversation();
-            localConv.charId = mess.chat_id + 2000000000;
+            localConv.chatId = mess.chat_id + 2000000000;
             localConv.chatTitle = mess.title;
             chats.push(localConv);
           } else {

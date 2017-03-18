@@ -27,7 +27,7 @@
   </div>
 </div>
 
-<a (click)="getArchive()"
+<a *ngIf="countSelectPhoto > 0" (click)="getArchive()"
    class="fixed-action-btn">
   <a class="btn-floating btn-large red">
     <i class="material-icons">get_app</i>

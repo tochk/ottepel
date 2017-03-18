@@ -1,13 +1,13 @@
 <ul *ngIf="conversations" class="collection">
   <li *ngFor="let conversation of conversations; let i = index"
       class="collection-item">
-    <span *ngIf="conversation.userId === -1">{{conversation.chatTitle}}</span>
-    <span *ngIf="conversation.userId !== -1">
+    {{i + 1}}.
+    <span *ngIf="conversation.userId === -1"
+          [routerLink]="['/photo', conversation.chatId]">{{conversation.chatTitle}}</span>
+    <span *ngIf="conversation.userId !== -1"
+          [routerLink]="['/photo', conversation.userId]">
       <img [src]="conversation.user.avatar" width="30px" height="30px">
       {{conversation.user.name}}
     </span>
-    <button class="btn-flat right" [routerLink]="['/photo', conversation.userId]">
-      get photos
-    </button>
   </li>
 </ul>
