@@ -3,11 +3,11 @@ import {Conversation} from "../classes/conversation";
 import {ConversationService} from "../services/conversation.service";
 
 @Component({
-  selector: 'app-conversation',
-  templateUrl: './conversation.component.html',
-  styleUrls: ['./conversation.component.css']
+  selector: 'app-conversations',
+  templateUrl: './conversations.component.html',
+  styleUrls: ['./conversations.component.css']
 })
-export class ConversationComponent implements OnInit {
+export class ConversationsComponent implements OnInit {
 
   isEnd:boolean;
   offset:number;
@@ -20,7 +20,7 @@ export class ConversationComponent implements OnInit {
   ngOnInit() {
     this.isEnd = false;
     this.offset = 0;
-    this.step = 200;
+    this.step = 20;
     this.conversations = [];
     this.loadConv();
   }
