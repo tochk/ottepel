@@ -7,13 +7,12 @@ import (
 	"encoding/json"
 	"strings"
 	"strconv"
-
-	"github.com/yanple/vk_api"
-	_ "github.com/jmoiron/sqlx"
-	_ "github.com/go-sql-driver/mysql"
 	"time"
 	"os"
 	"io"
+	"crypto/rand"
+
+	"github.com/yanple/vk_api"
 )
 
 type QueueItem struct {
@@ -28,6 +27,10 @@ var Queue struct {
 	Items        []QueueItem
 	MapTokenId   map[string]int
 	Free         bool
+}
+
+type PhotoToken struct {
+	Token string
 }
 
 type tokenUrl struct {
@@ -94,6 +97,15 @@ type Photos struct {
 type GetPhotosRequest struct {
 	AccessToken string
 	Photos      []string
+}
+
+type CheckStatusResp struct {
+	Token string
+}
+
+type QueueStatus struct {
+	Status   bool
+	QueuePos int
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +277,18 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(mapJson))
 }
 
-func addToQueue()
+func generateToken() string {
+	b := make([]byte, 30)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
+}
+
+func addToQueue(accessToken string, urlList []string) string {
+	queueItem := QueueItem{Token: generateToken(), AccessToken: accessToken, UrlList: urlList, Completed: false}
+	Queue.Items = append(Queue.Items, queueItem)
+	Queue.MapTokenId[queueItem.Token] = len(Queue.Items) - 1
+	return queueItem.Token
+}
 
 func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	var getPhotoRequest GetPhotosRequest
@@ -275,19 +298,31 @@ func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	go downloadFiles(getPhotoRequest.Photos)
+	token := addToQueue(getPhotoRequest.AccessToken, getPhotoRequest.Photos)
+
+	mapJson, err := json.Marshal(PhotoToken{Token: token})
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
 }
 
-func downloadFiles(files []string) {
+func downloadFiles(token string, files []string) {
 	log.Println("Total files: " + strconv.Itoa(len(files)))
 	for _, link := range files {
-		downloadSingleFile(link)
+		downloadSingleFile(token, link)
 	}
 }
 
-func downloadSingleFile(url string) {
+func downloadSingleFile(dir string, url string) {
 	tokens := strings.Split(url, "/")
-	fileName := "userFiles/" + tokens[len(tokens)-1]
+	err := os.Mkdir(dir, os.FileMode(0744))
+	if err != nil {
+		log.Println("Error while creating directory", dir, "-", err)
+		return
+	}
+	fileName := dir + "/" + tokens[len(tokens)-1]
 	dontDownload := false
 	for {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
@@ -301,29 +336,54 @@ func downloadSingleFile(url string) {
 	}
 	output, err := os.Create(fileName)
 	if err != nil {
-		fmt.Println("Error while creating", fileName, "-", err)
+		log.Println("Error while creating", fileName, "-", err)
 		return
 	}
 	defer output.Close()
 
 	response, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
+		log.Println("Error while downloading", url, "-", err)
 		return
 	}
 	defer response.Body.Close()
 
 	_, err = io.Copy(output, response.Body)
 	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
+		log.Println("Error while downloading", url, "-", err)
 		return
 	}
 }
 
 func queueWorker() {
 	for {
-		time.Sleep(time.Millisecond * 300)
+		if len(Queue.Items)-1 > Queue.CurrentJobId {
+			downloadFiles(Queue.Items[Queue.CurrentJobId+1].Token, Queue.Items[Queue.CurrentJobId+1].UrlList)
+			Queue.Items[Queue.CurrentJobId+1].Completed = true
+			Queue.CurrentJobId++
+		} else {
+			time.Sleep(time.Second * 1)
+		}
 	}
+}
+
+func queueStatusHandler(w http.ResponseWriter, r *http.Request) {
+	var checkStatusResp CheckStatusResp
+
+	err := json.NewDecoder(r.Body).Decode(&checkStatusResp)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	mapJson, err := json.Marshal(QueueStatus{
+		Status:   Queue.Items[Queue.MapTokenId[checkStatusResp.Token]].Completed,
+		QueuePos: Queue.MapTokenId[checkStatusResp.Token] - Queue.CurrentJobId,
+	})
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
 }
 
 func main() {
@@ -338,6 +398,7 @@ func main() {
 	http.HandleFunc("/token/", tokenHandler)
 	http.HandleFunc("/getPhotos/", photosHandler)
 	http.HandleFunc("/getArchive/", getPhotosArchiveHandler)
+	http.HandleFunc("/queueStatus/", queueStatusHandler)
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
 	if err != nil {
