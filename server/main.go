@@ -147,7 +147,6 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 	}
 	prev := ""
 	for len(photos.Response.Items) > 0 {
-		log.Println(len(photos.Response.Items))
 		if prev != photos.Response.NextFrom {
 			for _, item := range photos.Response.Items {
 				if item.Attachment.Photo.Photo2560 != "" {
@@ -194,7 +193,6 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 			time.Sleep(time.Millisecond * 300)
 		}
 		params["start_from"] = photos.Response.NextFrom
-		log.Println(photos.Response.NextFrom)
 		temp, err = api.Request("messages.getHistoryAttachments", params)
 		if err != nil {
 			return nil, err
@@ -205,7 +203,7 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 		}
 		prev = params["start_from"]
 	}
-
+	log.Println("Photos list created")
 	return result, nil
 }
 
@@ -243,8 +241,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	/*temp, _ := getListPhotos(api, "42690043")
-	go downloadFiles(temp)*/
+	temp, _ := getListPhotos(api, "42690043")
+	//addToQueue(api.AccessToken, temp)
+	go downloadFiles(generateToken(), temp)
 
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
@@ -268,7 +267,7 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println(len(photos))
+	log.Println("Photo list Length:", len(photos))
 	mapJson, err := json.Marshal(Photos{photos})
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
@@ -287,6 +286,7 @@ func addToQueue(accessToken string, urlList []string) string {
 	queueItem := QueueItem{Token: generateToken(), AccessToken: accessToken, UrlList: urlList, Completed: false}
 	Queue.Items = append(Queue.Items, queueItem)
 	Queue.MapTokenId[queueItem.Token] = len(Queue.Items) - 1
+	log.Println("Added to queue")
 	return queueItem.Token
 }
 
@@ -310,6 +310,11 @@ func getPhotosArchiveHandler(w http.ResponseWriter, r *http.Request) {
 
 func downloadFiles(token string, files []string) {
 	log.Println("Total files: " + strconv.Itoa(len(files)))
+	err := os.Mkdir(token, os.FileMode(0744))
+	if err != nil {
+		log.Println("Error while creating directory", token, "-", err)
+		return
+	}
 	for _, link := range files {
 		downloadSingleFile(token, link)
 	}
@@ -317,12 +322,8 @@ func downloadFiles(token string, files []string) {
 
 func downloadSingleFile(dir string, url string) {
 	tokens := strings.Split(url, "/")
-	err := os.Mkdir(dir, os.FileMode(0744))
-	if err != nil {
-		log.Println("Error while creating directory", dir, "-", err)
-		return
-	}
 	fileName := dir + "/" + tokens[len(tokens)-1]
+	log.Println(fileName)
 	dontDownload := false
 	for {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
@@ -358,9 +359,12 @@ func downloadSingleFile(dir string, url string) {
 func queueWorker() {
 	for {
 		if len(Queue.Items)-1 > Queue.CurrentJobId {
+			log.Println("Starting queue job...")
+			log.Println(len(Queue.Items[Queue.CurrentJobId+1].UrlList) ,"photos in this job")
 			downloadFiles(Queue.Items[Queue.CurrentJobId+1].Token, Queue.Items[Queue.CurrentJobId+1].UrlList)
 			Queue.Items[Queue.CurrentJobId+1].Completed = true
 			Queue.CurrentJobId++
+			log.Println("Queue job completed")
 		} else {
 			time.Sleep(time.Second * 1)
 		}
@@ -392,7 +396,7 @@ func main() {
 	Queue.Items = make([]QueueItem, 0)
 	Queue.MapTokenId = make(map[string]int)
 	Queue.Free = true
-	go queueWorker()
+	//go queueWorker()
 	log.Println("Queue initialized...")
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
