@@ -83,7 +83,8 @@ export class AuthService {
     return this.http.get('/vk/account.getProfileInfo?access_token=' + this.token.accessToken)
       .map((res:Response) => {
         let resBody:any = res.json().response;
-        this.user = new User(resBody.first_name + " " + resBody.last_name);
+        this.user = new User();
+        this.user.name = resBody.first_name + " " + resBody.last_name;
         return true;
       })
       .catch(AuthService.handleError);

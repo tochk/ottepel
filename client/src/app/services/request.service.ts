@@ -17,13 +17,6 @@ export class RequestService {
       .catch(RequestService.handleError);
   }
   
-  getChats():Observable<any> {
-    //noinspection TypeScriptUnresolvedFunction
-    return this.http.get('/api/conversation/')
-      .map(RequestService.extractData)
-      .catch(RequestService.handleError);
-  }
-
   getPhotos(convId: number):Observable<any> {
     //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/api/photo/' + convId)
