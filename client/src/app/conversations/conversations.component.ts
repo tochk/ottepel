@@ -21,7 +21,7 @@ export class ConversationsComponent implements OnInit {
   ngOnInit() {
     this.isEnd = false;
     this.offset = 0;
-    this.step = 20;
+    this.step = 40;
     this.conversations = [];
     this.loadConv();
   }

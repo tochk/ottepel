@@ -1,3 +1,13 @@
+h5 {
+  margin: 0;
+  font-weight: 300;
+}
+
+.modal-footer {
+  height: 4px;
+  padding: 0;
+}
+
 .selected-icon {
   position: absolute;
   top: 10px;
@@ -5,8 +15,20 @@
   opacity: 0.8;
 }
 
+.close-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  cursor: pointer;
+}
+
+.link-btn {
+  margin-top: 10px;
+}
+
 .pin.low-opacity {
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 #columns {

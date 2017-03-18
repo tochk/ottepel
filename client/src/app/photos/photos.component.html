@@ -1,19 +1,25 @@
 <div id="modal1" class="modal" materialize="modal"
      [materializeParams]="[{dismissible: false}]"
      [materializeActions]="modalActions">
-  <div class="modal-content">
-    <h4>Пожалуйста, подождите пока сформируется архив с фотографиями.</h4>
-    <a *ngIf="isLinkExist" [attr.href]="link">клик</a>
+
+  <div *ngIf="!isLinkExist" class="modal-content center">
+    <h5>Пожалуйста, подождите пока сформируется архив с фотографиями.</h5>
   </div>
-  <div class="modal-footer">
-    <div *ngIf="!isLinkExist" class="progress">
+
+  <div *ngIf="isLinkExist" class="modal-content center">
+    <a (click)="closeModal()">
+      <i class="material-icons black-text close-icon">clear</i>
+    </a>
+    <h5>Все готово!</h5>
+    <a [attr.href]="link" class="btn-flat link-btn">клик</a>
+  </div>
+
+  <div *ngIf="!isLinkExist" class="modal-footer">
+    <div class="progress">
       <div class="indeterminate"></div>
     </div>
-    <button class="waves-effect waves-green btn-flat"
-            [disabled]="!isLinkExist"
-            (click)="closeModal()">Close
-    </button>
   </div>
+
 </div>
 
 <div class="row">
@@ -33,7 +39,7 @@
       <div id="columns">
         <div *ngFor="let photo of photos; let i = index"
              (click)="selectPhoto(i)" class="pin"
-              [ngClass]="{'low-opacity': selectedPhoto[i]}">
+             [ngClass]="{'low-opacity': selectedPhoto[i]}">
           <img [src]="photo.url"/>
           <span *ngIf="selectedPhoto[i]"
                 class="btn-floating white selected-icon">
@@ -48,7 +54,7 @@
 
 <a *ngIf="countSelectPhoto > 0" (click)="getArchive()"
    class="fixed-action-btn">
-  <a class="btn-floating btn-large red">
-    <i class="material-icons">get_app</i>
+  <a class="btn-floating btn-large white">
+    <i class="material-icons black-text">get_app</i>
   </a>
 </a>
