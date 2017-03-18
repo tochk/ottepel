@@ -62,6 +62,9 @@ export class ConversationService {
             let localConv = new Conversation();
             localConv.chatId = mess.chat_id + 2000000000;
             localConv.chatTitle = mess.title;
+            if (mess.photo_100) {
+              localConv.chatImg = mess.photo_100;
+            }
             chats.push(localConv);
           } else {
             userIds.push(mess.user_id);

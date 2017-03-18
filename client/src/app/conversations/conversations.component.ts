@@ -1,6 +1,7 @@
 import {Component, OnInit, HostListener} from '@angular/core';
 import {Conversation} from "../classes/conversation";
 import {ConversationService} from "../services/conversation.service";
+import {PATH} from "../constants/routing";
 
 @Component({
   selector: 'app-conversations',
@@ -51,6 +52,19 @@ export class ConversationsComponent implements OnInit {
         this.offset += this.step;
       });
     }
+  }
+
+  getTooltipData(convIndex: number) {
+    return this.conversations[convIndex].userId === -1 ?
+      this.conversations[convIndex].chatTitle : this.conversations[convIndex].user.name;
+  }
+
+  getRouterLink(convIndex: number) {
+    let res = [PATH.PHOTO];
+    let id = this.conversations[convIndex].userId === -1 ?
+      this.conversations[convIndex].chatId : this.conversations[convIndex].userId;
+    res.push(id.toString());
+    return res;
   }
 
 }
