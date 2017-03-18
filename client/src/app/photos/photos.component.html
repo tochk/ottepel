@@ -13,15 +13,23 @@
 
     <div *ngIf="photos" class="row cards-container">
       <div *ngFor="let photo of photos; let i = index" class="col s12">
-        <div class="card">
+        <div (click)="selectPhoto(i)" class="card">
           <div class="card-image">
+            <span *ngIf="selectedPhoto[i]"
+                  class="btn-floating select-icon waves-effect waves-light blue">
+              <i class="material-icons">done</i>
+            </span>
             <img [src]="photo.url">
-          </div>
-          <div class="card-action">
-            <a href="javascript:void(0)"> Выбрать </a>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<a (click)="getArchive()"
+   class="fixed-action-btn">
+  <a class="btn-floating btn-large red">
+    <i class="material-icons">get_app</i>
+  </a>
+</a>

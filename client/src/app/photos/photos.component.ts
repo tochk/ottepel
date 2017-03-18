@@ -2,6 +2,7 @@ import {Component, OnInit, HostListener} from '@angular/core';
 import {Photo} from "../classes/photo";
 import {ActivatedRoute, Params} from '@angular/router';
 import {RequestService} from "../services/request.service";
+import {URLS} from "../constants/urls";
 
 @Component({
   selector: 'app-photos',
@@ -11,8 +12,9 @@ import {RequestService} from "../services/request.service";
 export class PhotosComponent implements OnInit {
   photos:Photo[];
   allPhoto:Photo[];
+  selectedPhoto:boolean[];
   lastIndex:number;
-  step: number;
+  step:number;
 
   constructor(private route:ActivatedRoute,
               private requestService:RequestService) {
@@ -24,6 +26,11 @@ export class PhotosComponent implements OnInit {
       let convId = +params['convId'];
       this.requestService.getPhotos(convId).subscribe((res) => {
         this.allPhoto = res;
+
+        this.selectedPhoto = new Array(res.length);
+        //noinspection TypeScriptUnresolvedFunction
+        this.selectedPhoto.fill(false);
+
         this.lastIndex = res.length < this.step ? res.length : this.step;
         this.photos = this.allPhoto.slice(0, this.lastIndex);
       });
@@ -56,4 +63,20 @@ export class PhotosComponent implements OnInit {
     }
   }
 
+  selectPhoto(photoIndex:number) {
+    this.selectedPhoto[photoIndex] = !this.selectedPhoto[photoIndex];
+  }
+
+  getArchive() {
+    let photoForArchive = [];
+    this.selectedPhoto.forEach((photo, i) => {
+      if (photo) {
+        photoForArchive.push(this.allPhoto[i].url);
+      }
+    });
+
+    this.requestService.getTokenForArchive(photoForArchive).subscribe(token => {
+      window.open(URLS.SERVER + 'api/userFiles/' + token + '.zip');
+    });
+  }
 }
