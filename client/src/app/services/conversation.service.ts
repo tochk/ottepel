@@ -21,6 +21,7 @@ export class ConversationService {
 
   getConv(limit: number) {
     this.conv = [];
+    //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/vk/messages.searchDialogs?access_token=' + this.authService.token.accessToken + '&limit=' + limit + '&v=5.62')
       .map(res => {
         let body = res.json().response;

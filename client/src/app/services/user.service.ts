@@ -14,6 +14,7 @@ export class UserService {
   }
 
   getUser(userId:number):Observable<any> {
+    //noinspection TypeScriptUnresolvedFunction
     return this.http.get('/vk/users.get?access_token=' + this.authService.token.accessToken
       + '&user_ids=' + userId)
       .map(res => {
