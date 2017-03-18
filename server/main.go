@@ -11,6 +11,7 @@ import (
 	"github.com/yanple/vk_api"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 )
 
 type tokenUrl struct {
@@ -34,6 +35,11 @@ type TokenAnswer struct {
 type UserData struct {
 	AccessToken string
 	ExpiresIn   int
+	UserId      int
+}
+
+type UserForPhoto struct {
+	AccessToken string
 	UserId      int
 }
 
@@ -65,6 +71,10 @@ type PhotoResp struct {
 	} `json:"response"`
 }
 
+type Photos struct {
+	Photos []string
+}
+
 func authHandler(w http.ResponseWriter, r *http.Request) {
 	var api vk_api.Api
 	authUrl, err := api.GetAuthUrl(
@@ -90,7 +100,7 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 	params["peer_id"] = userId
 	params["media_type"] = "photo"
 	params["count"] = "200"
-	params["photos"] = "5.62"
+	params["v"] = "5.62"
 	params["offset"] = "0"
 
 	var photos PhotoResp
@@ -102,22 +112,42 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, item := range photos.Response.Items {
-		log.Println("item")
-		if item.Attachment.Photo.Width > 1280 {
-			result = append(result, item.Attachment.Photo.Photo1280)
-		} else if item.Attachment.Photo.Width > 807 {
-			result = append(result, item.Attachment.Photo.Photo807)
-		} else if item.Attachment.Photo.Width > 604 {
-			result = append(result, item.Attachment.Photo.Photo604)
-		} else if item.Attachment.Photo.Width > 130 {
-			result = append(result, item.Attachment.Photo.Photo130)
-		} else if item.Attachment.Photo.Width > 75 {
-			result = append(result, item.Attachment.Photo.Photo75)
+	prev := ""
+	for len(photos.Response.Items) > 0 {
+		log.Println(len(photos.Response.Items))
+		if prev != photos.Response.NextFrom {
+			for _, item := range photos.Response.Items {
+				if item.Attachment.Photo.Width > 1280 {
+					result = append(result, item.Attachment.Photo.Photo1280)
+				} else if item.Attachment.Photo.Width > 807 {
+					result = append(result, item.Attachment.Photo.Photo807)
+				} else if item.Attachment.Photo.Width > 604 {
+					result = append(result, item.Attachment.Photo.Photo604)
+				} else if item.Attachment.Photo.Width > 130 {
+					result = append(result, item.Attachment.Photo.Photo130)
+				} else if item.Attachment.Photo.Width > 75 {
+					result = append(result, item.Attachment.Photo.Photo75)
+				} else {
+					log.Println("too small image", item.Attachment.Photo.Width)
+					log.Println("Item trace: ", item)
+				}
+			}
 		} else {
-			log.Println("too small image", item.Attachment.Photo.Width)
+			time.Sleep(time.Millisecond * 300)
 		}
+		params["start_from"] = photos.Response.NextFrom
+		log.Println(photos.Response.NextFrom)
+		temp, err = api.Request("messages.getHistoryAttachments", params)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal([]byte(temp), &photos)
+		if err != nil {
+			return nil, err
+		}
+		prev = params["start_from"]
 	}
+
 	return result, nil
 }
 
@@ -155,13 +185,6 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	photos, err := getListPhotos(api, "42690043")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println(photos)
-
 	mapJson, err := json.Marshal(tokenAnswer)
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
@@ -170,14 +193,33 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(mapJson))
 }
 
-func getPhotos(api vk_api.Api) {
-
+func photosHandler(w http.ResponseWriter, r *http.Request) {
+	var userForPhoto UserForPhoto
+	var api vk_api.Api
+	err := json.NewDecoder(r.Body).Decode(&userForPhoto)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	api.AccessToken = userForPhoto.AccessToken
+	photos, err := getListPhotos(api, strconv.Itoa(userForPhoto.UserId))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(len(photos))
+	mapJson, err := json.Marshal(Photos{photos})
+	if err != nil {
+		log.Printf("Error marshal: %s", err)
+		return
+	}
+	fmt.Fprint(w, string(mapJson))
 }
 
 func main() {
 	http.HandleFunc("/auth/", authHandler)
 	http.HandleFunc("/token/", tokenHandler)
-	//http.HandleFunc("/getConversations/", getListPhotos)
+	http.HandleFunc("/getPhotos/", photosHandler)
 
 	log.Println("Server started at port :4100")
 	err := http.ListenAndServe(":4100", nil)
