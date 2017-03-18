@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {RequestService} from "../services/request.service";
 import {Conversation} from "../classes/conversation";
+import {ConversationService} from "../services/conversation.service";
 
 @Component({
   selector: 'app-home',
@@ -11,15 +11,11 @@ export class HomeComponent implements OnInit {
 
   conversations: Conversation[];
 
-  constructor(private requestService: RequestService) { }
+  constructor(private convService: ConversationService) { }
 
   ngOnInit() {
-    // this.requestService.getChats().subscribe(res => {
-    // });
-
-    this.conversations = [];
-    for (let i = 0; i < 10; i++) {
-      this.conversations.push(Conversation.create(i, 'Some user name'));
-    }
+    this.convService.getConv(200).subscribe((res: any) => {
+      this.conversations = res;
+    });
   }
 }

@@ -12,6 +12,8 @@ import {RequestService} from "./services/request.service";
 import {AuthGuard} from "./services/auth-guard.service";
 import {AuthService} from "./services/auth.service";
 import { PhotosComponent } from './photos/photos.component';
+import {ConversationService} from "./services/conversation.service";
+import {UserService} from "./services/user.service";
 
 @NgModule({
   declarations: [
@@ -30,7 +32,9 @@ import { PhotosComponent } from './photos/photos.component';
   providers: [
     RequestService,
     AuthGuard,
-    AuthService
+    AuthService,
+    ConversationService,
+    UserService
   ],
   bootstrap: [AppComponent]
 })
