@@ -1,7 +1,8 @@
-import {Component, OnInit, HostListener} from '@angular/core';
+import {Component, OnInit, HostListener, EventEmitter} from '@angular/core';
 import {Photo} from "../classes/photo";
 import {ActivatedRoute, Params} from '@angular/router';
 import {RequestService} from "../services/request.service";
+import {MaterializeAction} from 'angular2-materialize';
 import {URLS} from "../constants/urls";
 
 @Component({
@@ -12,10 +13,16 @@ import {URLS} from "../constants/urls";
 export class PhotosComponent implements OnInit {
   photos:Photo[];
   allPhoto:Photo[];
+
   selectedPhoto:boolean[];
   countSelectPhoto:number;
+
   lastIndex:number;
   step:number;
+
+  isLinkExist:boolean;
+  token:string;
+  link:string;
 
   constructor(private route:ActivatedRoute,
               private requestService:RequestService) {
@@ -81,8 +88,33 @@ export class PhotosComponent implements OnInit {
       }
     });
 
+    this.openModal();
     this.requestService.getTokenForArchive(photoForArchive).subscribe(token => {
-      window.open(URLS.SERVER + '/userFiles/' + token + '.zip');
+      // window.open(URLS.SERVER + '/userFiles/' + token + '.zip');
+      this.token = token;
+
+      let checkToken = this.requestService.isFileExist(this.token).subscribe(res => {
+        this.isLinkExist = res;
+        if (res) {
+          this.link = URLS.SERVER + '/userFiles/' + this.token + '.zip';
+          checkToken.unsubscribe();
+        }
+      });
     });
   }
+
+  modalActions = new EventEmitter<string|MaterializeAction>();
+
+  openModal() {
+    this.modalActions.emit({action: "modal", params: ['open']});
+  }
+
+  closeModal() {
+    this.modalActions.emit({action: "modal", params: ['close']});
+
+    this.isLinkExist = false;
+    this.token = '';
+    this.selectedPhoto.fill(false);
+  }
+
 }

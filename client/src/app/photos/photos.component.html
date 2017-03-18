@@ -1,3 +1,20 @@
+<div id="modal1" class="modal" materialize="modal"
+     [materializeParams]="[{dismissible: false}]"
+     [materializeActions]="modalActions">
+  <div class="modal-content">
+    <h4>Пожалуйста, подождите пока сформируется архив с фотографиями.</h4>
+    <a *ngIf="isLinkExist" [attr.href]="link">клик</a>
+  </div>
+  <div class="modal-footer">
+    <div *ngIf="!isLinkExist" class="progress">
+      <div class="indeterminate"></div>
+    </div>
+    <button class="waves-effect waves-green btn-flat"
+            [disabled]="!isLinkExist"
+            (click)="closeModal()">Close</button>
+  </div>
+</div>
+
 <div class="row">
   <div class="col s10 offset-s1">
     <div class="row">

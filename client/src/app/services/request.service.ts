@@ -4,6 +4,8 @@ import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/throw';
+import 'rxjs/add/observable/interval';
+import 'rxjs/Rx';
 import {AuthService} from "./auth.service";
 import {Photo} from "../classes/photo";
 
@@ -65,6 +67,22 @@ export class RequestService {
     return this.http.get('api/userFiles/' + token + '.zip')
       .map(RequestService.extractData)
       .catch(RequestService.handleError);
+  }
+
+  isFileExist(token:string):Observable<any> {
+    let body = JSON.stringify({
+      "Token": token,
+    });
+
+    let headers = new Headers({'Content-Type': 'application/json'});
+    let options = new RequestOptions({headers: headers});
+
+    return Observable.interval(1000)
+      .switchMap(() => this.http.post('/api/isFileExist/', body, options))
+      .map(res => {
+        let body = res.json();
+        return body.IsExist;
+      });
   }
 
   private static extractData(res:Response) {

@@ -15,6 +15,7 @@ import { PhotosComponent } from './photos/photos.component';
 import {ConversationService} from "./services/conversation.service";
 import {UserService} from "./services/user.service";
 import { ConversationComponent } from './conversation/conversation.component';
+import { MaterializeModule } from 'angular2-materialize';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import { ConversationComponent } from './conversation/conversation.component';
     FormsModule,
     HttpModule,
     JsonpModule,
+    MaterializeModule,
     routing,
   ],
   providers: [
