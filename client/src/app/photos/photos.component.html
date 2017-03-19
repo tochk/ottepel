@@ -19,7 +19,6 @@
       <div class="indeterminate"></div>
     </div>
   </div>
-
 </div>
 
 <div class="row">
@@ -38,14 +37,22 @@
 
     <div *ngIf="photos" class="row">
       <div id="columns">
-        <div *ngFor="let photo of photos; let i = index"
-             (click)="selectPhoto(i)" class="pin"
-             [ngClass]="{'low-opacity': selectedPhoto[i]}">
-          <img [src]="photo.url"/>
+        <div *ngFor="let photo of photos; let i = index" class="pin"
+             (mouseover)="over(i)">
+          <img (click)="selectPhoto(i)" [src]="photo.url"/>
           <span *ngIf="selectedPhoto[i]"
-                class="btn-floating white selected-icon">
-            <i class="material-icons tiny black-text">done</i>
+                (click)="selectPhoto(i)"
+                class="btn-floating blue selected-icon">
+            <i class="material-icons tiny">done</i>
           </span>
+
+          <a *ngIf="mouseOverIndex === i"
+                [attr.href]="photo.url" target="_blank"
+                class="btn-floating white forward-icon">
+            <i class="material-icons tiny black-text">
+              arrow_forward
+            </i>
+          </a>
         </div>
       </div>
     </div>

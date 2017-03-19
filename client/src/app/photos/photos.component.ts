@@ -25,6 +25,8 @@ export class PhotosComponent implements OnInit {
   token:string;
   link:string;
 
+  mouseOverIndex: number;
+
   constructor(private route:ActivatedRoute,
               private requestService:RequestService) {
   }
@@ -107,7 +109,6 @@ export class PhotosComponent implements OnInit {
   }
 
   modalActions = new EventEmitter<string|MaterializeAction>();
-
   openModal() {
     this.modalActions.emit({action: "modal", params: ['open']});
   }
@@ -119,5 +120,8 @@ export class PhotosComponent implements OnInit {
     this.token = '';
     this.selectedPhoto.fill(false);
   }
-
+  
+  over(index: number) {
+    this.mouseOverIndex = index;
+  }
 }
