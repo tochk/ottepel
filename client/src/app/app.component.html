@@ -1,23 +1,2 @@
-<header>
-  <ul id="slide-out" class="side-nav fixed">
-    <li *ngIf="authService.isAuthorize">
-      <a class="brand-logo">
-        <i class="material-icons">
-          face
-        </i>
-        {{authService.user.name}}
-      </a>
-    </li>
-    <li><a href="javascript:void(0)" [routerLink]="['/']">Все диалоги</a></li>
-    <li *ngIf="authService.isAuthorize">
-      <a href="javascript:void(0)" (click)="authService.logout()">
-        Выйти
-      </a>
-    </li>
-  </ul>
-</header>
-
-<main>
-  <router-outlet></router-outlet>
-</main>
+<router-outlet></router-outlet>
 

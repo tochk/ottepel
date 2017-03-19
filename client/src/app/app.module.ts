@@ -16,6 +16,7 @@ import {ConversationService} from "./services/conversation.service";
 import {UserService} from "./services/user.service";
 import { ConversationsComponent } from './conversations/conversations.component';
 import { MaterializeModule } from 'angular2-materialize';
+import { SidenavComponent } from './sidenav/sidenav.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { MaterializeModule } from 'angular2-materialize';
     HomeComponent,
     PhotosComponent,
     ConversationsComponent,
+    SidenavComponent,
   ],
   imports: [
     BrowserModule,

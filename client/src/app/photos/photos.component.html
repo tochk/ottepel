@@ -1,75 +1,79 @@
-<div id="modal1" class="modal" materialize="modal"
-     [materializeParams]="[{dismissible: false}]"
-     [materializeActions]="modalActions">
+<app-sidenav></app-sidenav>
+<main>
+  <div id="modal1" class="modal" materialize="modal"
+       [materializeParams]="[{dismissible: false}]"
+       [materializeActions]="modalActions">
 
-  <div *ngIf="!isLinkExist" class="modal-content center">
-    <h5>Пожалуйста, подождите пока сформируется архив с фотографиями.</h5>
-  </div>
+    <div *ngIf="!isLinkExist" class="modal-content center">
+      <h5>Пожалуйста, подождите пока сформируется архив с фотографиями.</h5>
+    </div>
 
-  <div *ngIf="isLinkExist" class="modal-content center">
-    <a (click)="closeModal()">
-      <i class="material-icons black-text close-icon">clear</i>
-    </a>
-    <h5>Все готово!</h5>
-    <a [attr.href]="link" class="btn-flat link-btn">клик</a>
-  </div>
+    <div *ngIf="isLinkExist" class="modal-content center">
+      <a (click)="closeModal()">
+        <i class="material-icons black-text close-icon">clear</i>
+      </a>
+      <h5>Все готово!</h5>
+      <a [attr.href]="link" class="btn-flat link-btn">клик</a>
+    </div>
 
-  <div *ngIf="!isLinkExist" class="modal-footer">
-    <div class="progress">
-      <div class="indeterminate"></div>
+    <div *ngIf="!isLinkExist" class="modal-footer">
+      <div class="progress">
+        <div class="indeterminate"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="row">
-  <div class="col s12">
-    <div class="row">
-      <div class="col s12">
-        <div class="card">
-          <div class="card-content center">
-            <span *ngIf="!photos">Подождите, ваши фотографии загружаются.</span>
-            <span *ngIf="photos">В данном диалоге у вас - {{this.allPhoto.length}} фото.</span>
-            <button (click)="getArchive(true)" class="btn-flat">Скачать все</button>
+  <div class="row">
+    <div class="col s12">
+      <div class="row">
+        <div class="col s12">
+          <div class="card">
+            <div class="card-content center">
+              <div *ngIf="!photos">Подождите, ваши фотографии загружаются.</div>
+              <div *ngIf="photos">В данном диалоге у вас - {{this.allPhoto.length}} фото.</div>
+              <br>
+              <button *ngIf="photos" (click)="getArchive(true)" class="btn indigo accent-1">Скачать все</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div *ngIf="photos" class="row">
-      <div id="columns">
-        <div *ngFor="let photo of photos; let i = index" class="pin"
-             (mouseover)="over(i)">
-          <img (click)="selectPhoto(i)" [src]="photo.url"/>
+      <div *ngIf="photos" class="row">
+        <div id="columns">
+          <div *ngFor="let photo of photos; let i = index" class="pin"
+               (mouseover)="over(i)">
+            <img (click)="selectPhoto(i)" [src]="photo.url"/>
           <span *ngIf="selectedPhoto[i]"
                 (click)="selectPhoto(i)"
                 class="btn-floating blue selected-icon">
             <i class="material-icons tiny">done</i>
           </span>
 
-          <a *ngIf="mouseOverIndex === i"
-                [attr.href]="photo.url" target="_blank"
-                class="btn-floating white forward-icon">
-            <i class="material-icons tiny black-text">
-              arrow_forward
-            </i>
-          </a>
+            <a *ngIf="mouseOverIndex === i"
+               [attr.href]="photo.url" target="_blank"
+               class="btn-floating white forward-icon">
+              <i class="material-icons tiny black-text">
+                arrow_forward
+              </i>
+            </a>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="row">
-      <div class="col s12 center">
-        <span *ngIf="isAllLoad"> Все загружено </span>
-        <span *ngIf="!isAllLoad"> Грузится </span>
+      <div class="row">
+        <div class="col s12 center">
+          <span *ngIf="isAllLoad"> Все загружено </span>
+          <span *ngIf="!isAllLoad"> Грузится </span>
+        </div>
       </div>
+
     </div>
-
   </div>
-</div>
 
-<a *ngIf="countSelectPhoto > 0" (click)="getArchive(false)"
-   class="fixed-action-btn">
-  <a class="btn-floating btn-large red">
-    <i class="material-icons">get_app</i>
+  <a *ngIf="countSelectPhoto > 0" (click)="getArchive(false)"
+     class="fixed-action-btn">
+    <a class="btn-floating btn-large red">
+      <i class="material-icons">get_app</i>
+    </a>
   </a>
-</a>
+</main>
