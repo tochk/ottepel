@@ -1,19 +1,19 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"fmt"
-	"encoding/json"
-	"strings"
-	"strconv"
-	"time"
 	"os"
-	"io"
-	"crypto/rand"
+	"os/exec"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/yanple/vk_api"
-	"os/exec"
 )
 
 type tokenUrl struct {
