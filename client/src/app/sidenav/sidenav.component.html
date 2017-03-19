@@ -1,0 +1,14 @@
+<header>
+  <ul id="slide-out" class="side-nav fixed">
+    <li *ngIf="authService.isAuthorize" class="name center blue">
+      <h5>{{authService.user.name}}</h5>
+    </li>
+    <li><a href="javascript:void(0)" [routerLink]="['/']">Все диалоги</a></li>
+    <li *ngIf="authService.isAuthorize">
+      <a href="javascript:void(0)" (click)="authService.logout()">
+        Выйти
+      </a>
+    </li>
+  </ul>
+</header>
+

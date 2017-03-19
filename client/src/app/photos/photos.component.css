@@ -3,6 +3,10 @@ h5 {
   font-weight: 300;
 }
 
+.modal {
+  overflow-y: hidden;
+}
+
 .modal-footer {
   height: 4px;
   padding: 0;

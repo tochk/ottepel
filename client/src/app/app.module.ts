@@ -16,6 +16,8 @@ import {ConversationService} from "./services/conversation.service";
 import {UserService} from "./services/user.service";
 import { ConversationsComponent } from './conversations/conversations.component';
 import { MaterializeModule } from 'angular2-materialize';
+import { SidenavComponent } from './sidenav/sidenav.component';
+import { LoadingCircleComponent } from './loading-circle/loading-circle.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +26,8 @@ import { MaterializeModule } from 'angular2-materialize';
     HomeComponent,
     PhotosComponent,
     ConversationsComponent,
+    SidenavComponent,
+    LoadingCircleComponent,
   ],
   imports: [
     BrowserModule,
