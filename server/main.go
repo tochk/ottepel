@@ -374,11 +374,6 @@ func downloadFiles(files []string, dir string) {
 func downloadSingleFile(dir string, url string) {
 	tokens := strings.Split(url, "/")
 	fileName := dir + "/" + tokens[len(tokens)-1]
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-
-	} else {
-		return
-	}
 	output, err := os.Create(fileName)
 	if err != nil {
 		log.Println("Error while creating", fileName, "-", err)
