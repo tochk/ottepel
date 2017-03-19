@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -97,7 +98,7 @@ type IsFileExistRequest struct {
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
-	authUrl := "https://oauth.vk.com/authorize?client_id=" + VK_APP_ID +"&redirect_uri=https%3A%2F%2Fapi.vk.com%2Fblank.html&response_type=token&scope=friends%2Cmessages%2Coffline"
+	authUrl := "https://oauth.vk.com/authorize?client_id=" + VK_APP_ID + "&redirect_uri=https%3A%2F%2Fapi.vk.com%2Fblank.html&response_type=token&scope=friends%2Cmessages%2Coffline"
 	mapJson, err := json.Marshal(AuthAnswer{Code: 200, Url: authUrl, })
 	if err != nil {
 		log.Println(err)
@@ -183,8 +184,22 @@ func getListPhotos(api vk_api.Api, userId string) ([]string, error) {
 		}
 		prev = params["start_from"]
 	}
+	log.Println("Sorting photo")
+	sortedResult := make([]string, 0, len(result))
+	for _, link := range result {
+		isNotExist := true
+		for _, sortedLink := range sortedResult {
+			if sortedLink == link {
+				isNotExist = false
+				break
+			}
+		}
+		if isNotExist {
+			sortedResult = append(sortedResult, link)
+		}
+	}
 	log.Println("All photos loaded from attachments")
-	return result, nil
+	return sortedResult, nil
 }
 
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -254,16 +269,10 @@ func photosHandler(w http.ResponseWriter, r *http.Request) {
 func createArchive(files []string, dir string) {
 	log.Println("Creating archive for", dir)
 	downloadFiles(files, dir)
-	cmd := exec.Command("zip", "-r", "tempUserFiles/"+dir+".zip", dir)
-	err := cmd.Run()
-	if err != nil {
-		log.Println(err)
-		return
-	}
 	log.Println("Archive created for", dir)
 	log.Println("Moving archive to public directory")
 	cmdMove := exec.Command("mv", "tempUserFiles/"+dir+".zip", "userFiles/"+dir+".zip")
-	err = cmdMove.Run()
+	err := cmdMove.Run()
 	if err != nil {
 		log.Println(err)
 		return
@@ -304,15 +313,37 @@ func isFileExistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	isExist := true
-	if _, err := os.Stat("userFiles/"+isFileExistRequest.Token+".zip"); os.IsNotExist(err) {
+	if _, err := os.Stat("userFiles/" + isFileExistRequest.Token + ".zip"); os.IsNotExist(err) {
 		isExist = false
 	}
-	mapJson, err := json.Marshal(IsFileExistStruct{IsExist:isExist})
+	mapJson, err := json.Marshal(IsFileExistStruct{IsExist: isExist})
 	if err != nil {
 		log.Printf("Error marshal: %s", err)
 		return
 	}
 	fmt.Fprint(w, string(mapJson))
+}
+
+func createBashFile(dir string) {
+	cmdStr := "#/usr/bin/bash\n" + "zip" + " -m " + "tempUserFiles/" + dir + ".zip " + dir + "/*\n" + "echo \"heh\""
+	file, err := os.Create(dir + ".sh")
+	defer file.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	w := bufio.NewWriter(file)
+	buf := []byte(cmdStr)
+	_, err = w.Write(buf)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = w.Flush()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func downloadFiles(files []string, dir string) {
@@ -322,9 +353,20 @@ func downloadFiles(files []string, dir string) {
 		log.Println("Error while creating directory", dir, "-", err)
 		return
 	}
+	cmd := exec.Command("zip", "tempUserFiles/"+dir+".zip", dir)
+	err = cmd.Run()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	for _, link := range files {
 		downloadSingleFile(dir, link)
-		time.Sleep(time.Millisecond * 50)
+		createBashFile(dir)
+		cmd := exec.Command("bash", dir+".sh")
+		err := cmd.Run()
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	log.Println("Files downloaded for", dir)
 }
@@ -332,11 +374,6 @@ func downloadFiles(files []string, dir string) {
 func downloadSingleFile(dir string, url string) {
 	tokens := strings.Split(url, "/")
 	fileName := dir + "/" + tokens[len(tokens)-1]
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-
-	} else {
-		return
-	}
 	output, err := os.Create(fileName)
 	if err != nil {
 		log.Println("Error while creating", fileName, "-", err)
