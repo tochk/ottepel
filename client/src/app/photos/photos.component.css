@@ -11,8 +11,20 @@ h5 {
 .selected-icon {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   opacity: 0.8;
+}
+
+.forward-icon {
+  position: absolute;
+  bottom: 20px;
+  right: 10px;
+  opacity: 0.5;
+}
+
+.selected-icon:hover, .forward-icon:hover {
+  opacity: 1;
+  cursor: pointer;
 }
 
 .close-icon {
@@ -46,6 +58,7 @@ h5 {
 }
 
 .pin {
+  width: 100%;
   position: relative;
 
   margin: 0 2px 15px;
