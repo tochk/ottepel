@@ -1,0 +1,11 @@
+.card {
+  cursor: pointer;
+}
+
+.card .card-image img {
+  border-radius: 75px;
+}
+
+.border-radius {
+  border-radius: 75px;
+}

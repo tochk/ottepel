@@ -3,7 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { ConversationComponent } from './conversation.component';
+import { ConversationComponent } from './conversations.component';
 
 describe('ConversationComponent', () => {
   let component: ConversationComponent;
