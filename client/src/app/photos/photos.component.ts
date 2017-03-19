@@ -80,10 +80,10 @@ export class PhotosComponent implements OnInit {
     }
   }
 
-  getArchive() {
+  getArchive(isAll: boolean) {
     let photoForArchive = [];
     this.selectedPhoto.forEach((photo, i) => {
-      if (photo) {
+      if (isAll || photo) {
         photoForArchive.push(this.allPhoto[i].url);
       }
     });

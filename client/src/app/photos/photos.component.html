@@ -30,6 +30,7 @@
           <div class="card-content center">
             <span *ngIf="!photos">Подождите, ваши фотографии загружаются.</span>
             <span *ngIf="photos">В данном диалоге у вас - {{this.allPhoto.length}} фото.</span>
+            <button (click)="getArchive(true)" class="btn-flat">Скачать все</button>
           </div>
         </div>
       </div>
@@ -52,7 +53,7 @@
   </div>
 </div>
 
-<a *ngIf="countSelectPhoto > 0" (click)="getArchive()"
+<a *ngIf="countSelectPhoto > 0" (click)="getArchive(false)"
    class="fixed-action-btn">
   <a class="btn-floating btn-large white">
     <i class="material-icons black-text">get_app</i>
