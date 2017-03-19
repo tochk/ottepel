@@ -16,6 +16,8 @@ import (
 	"github.com/yanple/vk_api"
 )
 
+const VK_APP_ID = "5930862"
+
 type tokenUrl struct {
 	Url string
 }
@@ -95,15 +97,7 @@ type IsFileExistRequest struct {
 }
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
-	var api vk_api.Api
-	authUrl, err := api.GetAuthUrl(
-		"https://api.vk.com/blank.html",
-		"5930862",
-		"friends,messages,offline")
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	authUrl := "https://oauth.vk.com/authorize?client_id=" + VK_APP_ID +"&redirect_uri=https%3A%2F%2Fapi.vk.com%2Fblank.html&response_type=token&scope=friends%2Cmessages%2Coffline"
 	mapJson, err := json.Marshal(AuthAnswer{Code: 200, Url: authUrl, })
 	if err != nil {
 		log.Println(err)
