@@ -6,6 +6,7 @@
 
     <div *ngIf="!isLinkExist" class="modal-content center">
       <h5>Пожалуйста, подождите пока сформируется архив с фотографиями.</h5>
+      <p> Примерное время ожидания составляет - {{time}} мин. </p>
     </div>
 
     <div *ngIf="isLinkExist" class="modal-content center">
@@ -29,8 +30,10 @@
         <div class="col s12">
           <div class="card">
             <div class="card-content center">
-              <div *ngIf="!photos">Подождите, ваши фотографии загружаются.</div>
-              <div *ngIf="photos">В данном диалоге у вас - {{this.allPhoto.length}} фото.</div>
+              <div *ngIf="!photos">
+                Подождите, ваши фотографии загружаются.
+              </div>
+              <div *ngIf="photos">В данном диалоге у вас - {{allPhoto.length}} фото.</div>
               <br>
               <button *ngIf="photos" (click)="getArchive(true)" class="btn indigo accent-1">Скачать все</button>
             </div>

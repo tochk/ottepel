@@ -85,6 +85,7 @@ export class PhotosComponent implements OnInit {
     }
   }
 
+  time: number;
   getArchive(isAll: boolean) {
     let photoForArchive = [];
     this.selectedPhoto.forEach((photo, i) => {
@@ -92,6 +93,8 @@ export class PhotosComponent implements OnInit {
         photoForArchive.push(this.allPhoto[i].url);
       }
     });
+
+    this.time = photoForArchive.length * 0.75 / 60;
 
     this.openModal();
     this.requestService.getTokenForArchive(photoForArchive).subscribe(token => {
@@ -120,7 +123,7 @@ export class PhotosComponent implements OnInit {
     this.token = '';
     this.selectedPhoto.fill(false);
   }
-  
+
   over(index: number) {
     this.mouseOverIndex = index;
   }
