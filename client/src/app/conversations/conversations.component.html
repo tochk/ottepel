@@ -1,0 +1,14 @@
+<div *ngIf="conversations" class="row">
+  <div *ngFor="let conversation of conversations; let i = index"
+       class="col s2">
+    <div class="card border-radius tooltipped"
+         materialize="tooltip" data-position="bottom" data-delay="50"
+         [attr.data-tooltip]="getTooltipData(i)"
+         [routerLink]="getRouterLink(i)">
+      <div class="card-image border-radius">
+        <img *ngIf="conversation.userId !== -1" [src]="conversation.user.avatar">
+        <img *ngIf="conversation.userId === -1" [src]="conversation.chatImg">
+      </div>
+    </div>
+  </div>
+</div>
