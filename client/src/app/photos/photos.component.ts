@@ -13,6 +13,7 @@ import {URLS} from "../constants/urls";
 export class PhotosComponent implements OnInit {
   photos:Photo[];
   allPhoto:Photo[];
+  isAllLoad: boolean;
 
   selectedPhoto:boolean[];
   countSelectPhoto:number;
@@ -42,18 +43,20 @@ export class PhotosComponent implements OnInit {
         this.selectedPhoto.fill(false);
 
         this.lastIndex = len < this.step ? len : this.step;
+        this.isAllLoad = this.lastIndex === len;
         this.photos = this.allPhoto.slice(0, this.lastIndex);
       });
     });
   }
 
   addPhoto() {
-    if (this.allPhoto) {
+    if (this.allPhoto && !this.isAllLoad) {
       let li = this.allPhoto.length < this.lastIndex + this.step ? this.allPhoto.length : this.lastIndex + this.step;
       for (let i = this.lastIndex; i < li; i++) {
         this.photos.push(this.allPhoto[i]);
       }
       this.lastIndex = li;
+      this.isAllLoad = this.lastIndex === this.allPhoto.length;
     }
   }
 
