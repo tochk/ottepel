@@ -1,27 +1,27 @@
-<div class="row">
+<div class="row auth-cont">
   <div class="col s8 offset-s2">
     <div class="card">
       <div class="card-content center">
-
-        <p>Пожалуйста, авторизуйтесь через vk. Для того чтобы получить доступ
+        <h2 class="blue-text">~SVK~</h2>
+        <p class="fs">Пожалуйста, авторизуйтесь через vk. Для того чтобы получить доступ
           к вашим диалогам и соответсвенно фотографиям нам понадобится ссылка
-          на которую вас перенаправит после успешной авторизации. Мы не храним Ваши токены авторизации на сервере
-          Если вы не уверены в нашем продукте, то можете установить и использовать приложение
-          у себя на компьютере. Скачать его можно по <a href="https://github.com/tochk/ottepel">ссылке</a>
-          Инстуркция по установке также доступна на <a href="https://github.com/tochk/ottepel/blob/master/README.md">GitHub</a>
+          на которую вас перенаправит после успешной авторизации. Мы <b>не храним</b> Ваши токены авторизации на сервере.
+          Если вы не уверены в нашем продукте, то запустить и использовать приложение можно локально
+          у себя на компьютере. Скачать его можно по <a href="https://github.com/tochk/ottepel">ссылке</a>.
+          Инструкция по установке доступна на <a href="https://github.com/tochk/ottepel/blob/master/README.md">GitHub</a>.
         </p><br>
 
-        <a [attr.href]="authLink" target="_blank" class="btn indigo accent-1">Получить ссылку</a>
+        <a [attr.href]="authLink" target="_blank" class="btn blue white-text">Получить ссылку</a>
         <br><br>
-        <p>
-          Далее, вставьте ссылку вида https://api.vk.com/blank.html#access_token=...&expires_in=0&user_id=... из адресной строки в поле ниже
+        <p class="fs">
+          Далее, вставьте ссылку вида https://api.vk.com/blank.html#access_token=...&expires_in=0&user_id=... из адресной строки в поле ниже.
         </p>
 
         <div class="input-field">
           <input id="token" type="text" [(ngModel)]="token" name="token">
           <label for="token">Ссылка</label>
         </div>
-        <button (click)="sendToken()" class="btn indigo accent-1">Отправить ссылку</button>
+        <button (click)="sendToken()" class="btn blue white-text">Отправить ссылку</button>
 
       </div>
     </div>

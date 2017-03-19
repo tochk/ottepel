@@ -15,7 +15,7 @@
 
 <div class="row">
   <div class="col s12 center">
-    <span *ngIf="isEnd"> Все загружено </span>
-    <span *ngIf="!isEnd"> Грузится </span>
+    <div *ngIf="isEnd"> Все диалоги загружены </div>
+    <app-loading-circle *ngIf="!isEnd"></app-loading-circle>
   </div>
 </div>

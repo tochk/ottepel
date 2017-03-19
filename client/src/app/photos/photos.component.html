@@ -35,7 +35,7 @@
               </div>
               <div *ngIf="photos">В данном диалоге у вас - {{allPhoto.length}} фото.</div>
               <br>
-              <button *ngIf="photos" (click)="getArchive(true)" class="btn indigo accent-1">Скачать все</button>
+              <button *ngIf="photos" (click)="getArchive(true)" class="btn blue white-text">Скачать все</button>
             </div>
           </div>
         </div>
@@ -65,8 +65,10 @@
 
       <div class="row">
         <div class="col s12 center">
-          <span *ngIf="isAllLoad"> Все загружено </span>
-          <span *ngIf="!isAllLoad"> Грузится </span>
+          <span *ngIf="isAllLoad && allPhoto.length > 0"> Все фотографии показаны </span>
+          <span *ngIf="!isAllLoad">
+            <app-loading-circle></app-loading-circle>
+          </span>
         </div>
       </div>
 
