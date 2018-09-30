@@ -1,4 +1,5 @@
 # SVK
+# This application is no longer supported!
 
 Tool for download photo from vk converstaions
 
